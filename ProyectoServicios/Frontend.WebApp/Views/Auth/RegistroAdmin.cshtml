@@ -1,0 +1,15 @@
+﻿@model Shared.Models.AdministradorDto
+
+<h2>Registro Administrador</h2>
+
+<form method="post" asp-action="RegistroAdmin">
+    <input asp-for="Nombre" placeholder="Nombre" />
+    <input asp-for="Apellido" placeholder="Apellido" />
+    <input asp-for="NroDocumento" placeholder="Número de Documento" />
+    <input asp-for="Telefono" placeholder="Teléfono" />
+    <input asp-for="Correo" placeholder="Correo" />
+    <input asp-for="Clave" type="password" placeholder="Clave" />
+    <button type="submit">Registrar</button>
+</form>
+
+<p style="color:green;">@ViewBag.Mensaje</p>

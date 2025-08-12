@@ -1,0 +1,16 @@
+﻿@model Shared.Models.ClienteDto
+
+<h2>Registro Cliente</h2>
+
+<form method="post" asp-action="RegistroCliente">
+    <input asp-for="Nombre" placeholder="Nombre" />
+    <input asp-for="Apellido" placeholder="Apellido" />
+    <input asp-for="NroDocumento" placeholder="Número de Documento" />
+    <input asp-for="Direccion" placeholder="Dirección" />
+    <input asp-for="NumeroTelf" placeholder="Número de Teléfono" />
+    <input asp-for="Correo" placeholder="Correo" />
+    <input asp-for="Clave" type="password" placeholder="Clave" />
+    <button type="submit">Registrar</button>
+</form>
+
+<p style="color:green;">@ViewBag.Mensaje</p>

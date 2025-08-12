@@ -1,0 +1,12 @@
+﻿@model Shared.Models.LoginDto
+
+<h2>Login</h2>
+
+<form method="post" asp-action="Login">
+    <input asp-for="Correo" placeholder="Correo" />
+    <input asp-for="Clave" type="password" placeholder="Clave" />
+    <button type="submit">Ingresar</button>
+</form>
+<span class="small text-muted">¿Aún no tienes cuenta?</span>
+<a asp-controller="Auth" asp-action="RegistroCliente" class="small ms-1">Crear cuenta de cliente</a>
+<p style="color:red;">@ViewBag.Mensaje</p>
