@@ -1,0 +1,161 @@
+﻿@model Frontend.WebApp.Models.Cliente
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Editar Cliente";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary-dark': '#333333',
+                        'secondary-dark': '#555555',
+                        'accent-blue': '#3b82f6',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="font-sans bg-[#f5f5f5] text-[#1a1a1a]">
+    <br />
+
+    <div class="max-w-2xl mx-auto my-5 p-6 bg-white rounded-lg shadow-xl animate-fade-in">
+        <h2 id="page-title" class="text-2xl font-normal text-center text-[#333] mb-4 tracking-wider uppercase drop-shadow-[3px_3px_6px_rgba(50,50,50,0.6)]">
+            Actualizar datos del cliente con ID @Model.ID_Cliente
+        </h2>
+
+        <div class="p-8 border-t-4 border-primary-dark rounded-xl transition-all duration-300 hover:transform hover:-translate-y-1">
+            <h4 class="text-center text-lg font-semibold text-secondary-dark mb-4">Modificar información registrada</h4>
+            <hr class="mb-4" />
+
+            @using (Html.BeginForm("Edit", "Cliente", FormMethod.Post, new { id = "formActualizar" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(m => m.ID_Cliente)
+
+                <div class="flex flex-col md:flex-row gap-4 mb-4">
+                    <div class="w-full md:w-1/2">
+                        @Html.LabelFor(m => m.Nombre, new { @class = "block text-base font-bold text-[#333] mb-1" })
+                        @Html.TextBoxFor(m => m.Nombre, new { @class = "block w-full p-2.5 bg-[#f0f0f0] border border-[#ccc] rounded-lg text-lg transition-all duration-300 focus:border-primary-dark focus:ring-2 focus:ring-primary-dark focus:ring-opacity-50", required = "required" })
+                    </div>
+                    <div class="w-full md:w-1/2">
+                        @Html.LabelFor(m => m.Apellido, new { @class = "block text-base font-bold text-[#333] mb-1" })
+                        @Html.TextBoxFor(m => m.Apellido, new { @class = "block w-full p-2.5 bg-[#f0f0f0] border border-[#ccc] rounded-lg text-lg transition-all duration-300 focus:border-primary-dark focus:ring-2 focus:ring-primary-dark focus:ring-opacity-50", required = "required" })
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 mb-4">
+                    <div class="w-full md:w-1/2">
+                        @Html.LabelFor(m => m.NroDocumento, "N° Documento", new { @class = "block text-base font-bold text-[#333] mb-1" })
+                        @Html.TextBoxFor(m => m.NroDocumento, new { @class = "block w-full p-2.5 bg-[#f0f0f0] border border-[#ccc] rounded-lg text-lg transition-all duration-300 focus:border-primary-dark focus:ring-2 focus:ring-primary-dark focus:ring-opacity-50", required = "required" })
+                    </div>
+                    <div class="w-full md:w-1/2">
+                        @Html.LabelFor(m => m.Direccion, new { @class = "block text-base font-bold text-[#333] mb-1" })
+                        @Html.TextBoxFor(m => m.Direccion, new { @class = "block w-full p-2.5 bg-[#f0f0f0] border border-[#ccc] rounded-lg text-lg transition-all duration-300 focus:border-primary-dark focus:ring-2 focus:ring-primary-dark focus:ring-opacity-50", required = "required" })
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 mb-4">
+                    <div class="w-full md:w-1/2">
+                        @Html.LabelFor(m => m.NumeroTelf, "Teléfono", new { @class = "block text-base font-bold text-[#333] mb-1" })
+                        @Html.TextBoxFor(m => m.NumeroTelf, new { @class = "block w-full p-2.5 bg-[#f0f0f0] border border-[#ccc] rounded-lg text-lg transition-all duration-300 focus:border-primary-dark focus:ring-2 focus:ring-primary-dark focus:ring-opacity-50", required = "required" })
+                    </div>
+                    <div class="w-full md:w-1/2">
+                        @Html.LabelFor(m => m.Correo, new { @class = "block text-base font-bold text-[#333] mb-1" })
+                        @Html.TextBoxFor(m => m.Correo, new { type = "email", @class = "block w-full p-2.5 bg-[#f0f0f0] border border-[#ccc] rounded-lg text-lg transition-all duration-300 focus:border-primary-dark focus:ring-2 focus:ring-primary-dark focus:ring-opacity-50", required = "required" })
+                    </div>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-4 mb-8">
+                    <div class="w-full md:w-1/2">
+                        @Html.LabelFor(m => m.Estado, new { @class = "block text-base font-bold text-[#333] mb-1" })
+                        @Html.DropDownListFor(
+                        m => m.Estado,
+                                        new SelectList(new[] {
+                                        new { Value = "Activo", Text = "Activo" },
+                                        new { Value = "Sancionado", Text = "Sancionado" }
+                                        }, "Value", "Text"),
+                                        "-- Seleccione estado --",
+                                        new { @class = "block w-full p-2.5 bg-[#f0f0f0] border border-[#ccc] rounded-lg text-lg transition-all duration-300 focus:border-primary-dark focus:ring-2 focus:ring-primary-dark focus:ring-opacity-50", required = "required" }
+                                        )
+                </div>
+                <div class="w-full md:w-1/2"></div>
+            </div>
+
+            <div class="flex justify-center gap-16 mt-8">
+                <button type="submit" class="w-40 h-12 flex items-center justify-center px-6 py-2 bg-black text-white font-bold rounded-lg shadow-lg hover:bg-[#333] border-2 border-black transition duration-300 ease-in-out hover:scale-105">
+                    Actualizar
+                </button>
+                <a href="@Url.Action("ListClientes", "Cliente")" class="w-40 h-12 flex items-center justify-center px-6 py-2 bg-[#555] text-white font-bold rounded-lg shadow-lg hover:bg-[#333] transition duration-300 ease-in-out hover:scale-105">
+                    Cancelar
+                </a>
+            </div>
+                        }
+        </div>
+    </div>
+
+    <script>
+        document.getElementById("formActualizar").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const form = this;
+            Swal.fire({
+                title: '¿Confirmar actualización?',
+                text: "¿Deseas actualizar los datos del cliente?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, actualizar',
+                cancelButtonText: 'Cancelar',
+                customClass: { popup: 'swal-custom-popup' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(form.action, {
+                        method: form.method,
+                        body: new FormData(form),
+                        headers: {
+                            'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0].value
+                        }
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            Swal.fire({
+                                title: '¡Actualizado!',
+                                text: 'El cliente se actualizó correctamente',
+                                icon: 'success',
+                                confirmButtonText: 'Aceptar',
+                                customClass: { popup: 'swal-custom-popup' }
+                            }).then(() => {
+                                window.location.href = '@Url.Action("ListClientes", "Cliente")';
+                            });
+                        } else {
+                            Swal.fire('Error', 'No se pudo actualizar el cliente', 'error');
+                        }
+                    })
+                    .catch(() => {
+                        Swal.fire('Error', 'Ocurrió un problema con la actualización', 'error');
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>s

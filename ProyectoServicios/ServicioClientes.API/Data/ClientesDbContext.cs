@@ -10,6 +10,8 @@ namespace ServicioClientes.API.Data
         public DbSet<Usuario> Usuario { get; set; }
         public DbSet<Cliente> Cliente { get; set; }
         public DbSet<Administrador> Administrador { get; set; }
+        public DbSet<Cliente> ClientesMasReservas { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -1,0 +1,230 @@
+﻿@model Frontend.WebApp.Models.PaginacionResponse
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    int totalPages = (int)Math.Ceiling((double)Model.TotalRecords / Model.PageSize);
+}
+
+
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary-dark': '#333333',
+                        'secondary-dark': '#555555',
+                        'table-header': '#333333',
+                        'table-row-even': '#f8f8f8',
+                        'table-row-hover': '#e8e8e8',
+                        'danger': '#cc0000',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="font-sans bg-[#f5f5f5] text-[#1a1a1a]">
+    <br />
+
+    <div class="list-clientes-container max-w-7xl mx-auto my-5 p-6 bg-white rounded-lg shadow-xl">
+        <h2 class="text-3xl font-normal text-center text-[#333] mb-8 tracking-wider uppercase">
+            MANTENIMIENTO DE CLIENTES
+        </h2>
+
+        <div class="flex mb-4">
+            <button id="toggleFiltrosBtn" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-secondary-dark hover:bg-primary-dark transition-colors duration-300">
+                <i class="fa fa-sliders-h mr-2"></i> Filtros
+            </button>
+        </div>
+
+        <div id="filtrosForm" class="hidden">
+            <form method="get" asp-action="ListClientes" asp-controller="Cliente" class="flex flex-col md:flex-row items-center justify-start gap-4 mb-6 p-5 bg-white rounded-md shadow-sm border border-[#e0e0e0]">
+                <div class="flex-grow flex flex-col md:flex-row items-center gap-4 w-full">
+                    <div class="w-full md:w-auto">
+                        <label for="filtro" class="block text-sm font-normal text-[#555] mb-1">Apellido o Documento</label>
+                        <input type="text" name="filtro" id="filtro" value="@(ViewData["Filtro"] ?? "")" placeholder="Buscar Apellido o Documento" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2" />
+                    </div>
+                </div>
+                <div class="flex mt-4 md:mt-0 gap-2">
+                    <button type="submit" class="btn btn-dark px-6 py-2 bg-primary-dark text-white font-bold rounded-md shadow-lg hover:bg-secondary-dark transition duration-300">
+                        Buscar
+                    </button>
+                    <a href="@Url.Action("ListClientes", "Cliente")" class="btn btn-secondary px-6 py-2 bg-secondary-dark text-white font-bold rounded-md shadow-lg hover:bg-primary-dark transition duration-300">
+                        Limpiar
+                    </a>
+                </div>
+            </form>
+        </div>
+
+
+        <div class="overflow-x-auto mt-8">
+            <table id="clientes-table" class="min-w-full border-collapse">
+                <thead class="bg-table-header text-white uppercase text-xs tracking-wider">
+                    <tr>
+                        <th scope="col" class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">ID</th>
+                        <th scope="col" class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">NOMBRE</th>
+                        <th scope="col" class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">APELLIDO</th>
+                        <th scope="col" class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">N.° DOCUMENTO</th>
+                        <th scope="col" class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">DIRECCIÓN</th>
+                        <th scope="col" class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">TELÉFONO</th>
+                        <th scope="col" class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">CORREO</th>
+                        <th scope="col" class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">FECHA DE REGISTRO</th>
+                        <th scope="col" class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">ESTADO</th>
+                        <th scope="col" class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">ACCIONES</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white">
+                    @if (!Model.Items.Any())
+                    {
+                        <tr><td colspan="10" class="text-center text-gray-500">No se encontraron clientes.</td></tr>
+                    }
+                    else
+                    {
+                        int rowIndex = 0;
+                        foreach (var item in Model.Items)
+                        {
+                            string rowClass = (rowIndex % 2 == 0) ? "bg-white" : "bg-[#f8f8f8]";
+                            <tr class="border border-[#e0e0e0] transition-colors duration-300 @rowClass hover:bg-[#e8e8e8]">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">@item.ID_Cliente</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">@item.Nombre</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">@item.Apellido</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">@item.NroDocumento</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">@item.Direccion</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">@item.NumeroTelf</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">@item.Correo</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">@item.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">@item.Estado</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-[#555] text-center">
+                                    <div class="flex gap-2 justify-center">
+                                        <a asp-action="Details" asp-route-id="@item.ID_Cliente" title="Detalle" class="text-secondary-dark hover:text-primary-dark transition-colors duration-300">
+                                            <i class="fa fa-magnifying-glass text-lg"></i>
+                                        </a>
+                                        <a asp-action="Edit" asp-route-id="@item.ID_Cliente" title="Editar" class="text-secondary-dark hover:text-primary-dark transition-colors duration-300">
+                                            <i class="fa fa-pen text-lg"></i>
+                                        </a>
+                                        <a href="#" title="Delete" class="text-danger hover:text-primary-dark transition-colors duration-300" data-eliminar="@item.ID_Cliente">
+                                            <i class="fa fa-trash text-lg"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            rowIndex++;
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginación -->
+        <div id="pagination-controls" class="mt-8 flex justify-center items-center gap-2">
+            @if (totalPages > 1)
+            {
+                <a asp-action="ListClientes" asp-route-pageNumber="1" asp-route-filtro="@ViewData["Filtro"]"
+                   class="px-4 py-2 text-sm font-semibold rounded-md transition duration-300
+                      @(Model.CurrentPage == 1 ? "bg-primary-dark text-white" : "bg-white text-secondary-dark hover:bg-gray-200")">
+                    Primera
+                </a>
+
+                <a asp-action="ListClientes" asp-route-pageNumber="@(Model.CurrentPage - 1)" asp-route-filtro="@ViewData["Filtro"]"
+                   class="px-4 py-2 text-sm font-semibold rounded-md transition duration-300
+                      @(Model.CurrentPage <= 1 ? "text-gray-400 bg-gray-200 cursor-not-allowed" : "bg-white text-secondary-dark hover:bg-gray-200")">
+                    &laquo; Prev
+                </a>
+
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <a asp-action="ListClientes" asp-route-pageNumber="@i" asp-route-filtro="@ViewData["Filtro"]"
+                       class="px-4 py-2 text-sm font-semibold rounded-md transition duration-300
+                              @(i == Model.CurrentPage ? "bg-primary-dark text-white" : "bg-white text-secondary-dark hover:bg-gray-200")">
+                        @i
+                    </a>
+                }
+
+                <a asp-action="ListClientes" asp-route-pageNumber="@(Model.CurrentPage + 1)" asp-route-filtro="@ViewData["Filtro"]"
+                   class="px-4 py-2 text-sm font-semibold rounded-md transition duration-300
+                      @(Model.CurrentPage >= totalPages ? "text-gray-400 bg-gray-200 cursor-not-allowed" : "bg-white text-secondary-dark hover:bg-gray-200")">
+                    Next &raquo;
+                </a>
+
+                <a asp-action="ListClientes" asp-route-pageNumber="@totalPages" asp-route-filtro="@ViewData["Filtro"]"
+                   class="px-4 py-2 text-sm font-semibold rounded-md transition duration-300
+                      @(Model.CurrentPage == totalPages ? "bg-primary-dark text-white" : "bg-white text-secondary-dark hover:bg-gray-200")">
+                    Última
+                </a>
+            }
+        </div>
+
+    </div>
+
+    <br />
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggleFiltrosBtn = document.getElementById('toggleFiltrosBtn');
+            const filtrosForm = document.getElementById('filtrosForm');
+
+            // Mantener estado de filtro visible con localStorage
+            const visible = localStorage.getItem("filtrosClientesVisible") === "true";
+            if (visible) {
+                filtrosForm.classList.remove('hidden');
+                toggleFiltrosBtn.textContent = 'Ocultar Filtros';
+            }
+
+            toggleFiltrosBtn.addEventListener("click", () => {
+                const currentlyVisible = !filtrosForm.classList.contains('hidden');
+                if (currentlyVisible) {
+                    filtrosForm.classList.add('hidden');
+                    toggleFiltrosBtn.innerHTML = '<i class="fa fa-sliders-h mr-2"></i> Filtros';
+                } else {
+                    filtrosForm.classList.remove('hidden');
+                    toggleFiltrosBtn.textContent = 'Ocultar Filtros';
+                }
+                localStorage.setItem("filtrosClientesVisible", !currentlyVisible);
+            });
+
+            // Confirmación de eliminar con SweetAlert2
+            //DELETE
+                document.querySelectorAll('[data-eliminar]').forEach(enlace => {
+            enlace.addEventListener('click', function (e) {
+                e.preventDefault(); // Evita que se navegue a "#"
+
+                const idCliente = this.getAttribute('data-eliminar');
+
+                Swal.fire({
+                    title: '¿Eliminar cliente?',
+                    text: 'Esta acción no se puede deshacer',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Aquí haces la redirección al controlador de eliminación
+                        window.location.href = `/Cliente/Delete/${idCliente}`;
+                    }
+                });
+            });
+        });
+
+        });
+    </script>
+</body>
+</html>
