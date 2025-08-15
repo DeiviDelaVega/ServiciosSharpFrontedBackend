@@ -1,7 +1,9 @@
 ﻿@model Frontend.WebApp.Models.ReservaIndexViewModel
 
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = null;
+    ViewData["Title"] = "Mantenimiento de Inmuebles";
+    @Html.Partial("_NavAdmin")
     int totalPages = Model.totalPages;
 }
 

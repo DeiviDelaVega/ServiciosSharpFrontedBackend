@@ -7,12 +7,46 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\css\PaginaInicioAdminCliente.css" />
+    <Content Remove="wwwroot\imagenes\baner1.jpg" />
+    <Content Remove="wwwroot\imagenes\baner2.jpg" />
+    <Content Remove="wwwroot\imagenes\baner3.jpg" />
+    <Content Remove="wwwroot\imagenes\baner4.jpg" />
+    <Content Remove="wwwroot\imagenes\banner1.jpg" />
+    <Content Remove="wwwroot\imagenes\banner2.jpg" />
+    <Content Remove="wwwroot\imagenes\banner3.jpg" />
+    <Content Remove="wwwroot\imagenes\banner4.jpg" />
+    <Content Remove="wwwroot\imagenes\OIP.jpg" />
+    <Content Remove="wwwroot\js\AdminJs.js" />
+    <Content Remove="wwwroot\js\ClienteJs.js" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.13.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Shared.Models\Shared.Models.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="NewFolder\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\css\PaginaInicioAdminCliente.css" />
+    <None Include="wwwroot\imagenes\baner1.jpg" />
+    <None Include="wwwroot\imagenes\baner2.jpg" />
+    <None Include="wwwroot\imagenes\baner3.jpg" />
+    <None Include="wwwroot\imagenes\baner4.jpg" />
+    <None Include="wwwroot\imagenes\banner1.jpg" />
+    <None Include="wwwroot\imagenes\banner2.jpg" />
+    <None Include="wwwroot\imagenes\banner3.jpg" />
+    <None Include="wwwroot\imagenes\banner4.jpg" />
+    <None Include="wwwroot\imagenes\OIP.jpg" />
+    <None Include="wwwroot\js\AdminJs.js" />
+    <None Include="wwwroot\js\ClienteJs.js" />
   </ItemGroup>
 
 </Project>

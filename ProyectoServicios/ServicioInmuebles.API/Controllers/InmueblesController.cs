@@ -1,4 +1,6 @@
-﻿using CloudinaryDotNet;
+﻿using System.Security.Claims;
+using System.Text.RegularExpressions;
+using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -6,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ServicioInmuebles.API.Data;
 using ServicioInmuebles.API.Models;
-using System.Security.Claims;
 using Shared.Models;
 
 namespace ServicioInmuebles.API.Controllers
@@ -85,23 +86,66 @@ namespace ServicioInmuebles.API.Controllers
 
         [HttpPut("{id:int}")]
         [Authorize(Roles = "admin")]
-        public async Task<ActionResult> Update(int id, [FromBody] Inmueble body)
+        public async Task<ActionResult<Inmueble>> Update(int id, [FromForm] CrearInmuebleDto dto, IFormFile? imagen)
         {
             var entity = await _ctx!.Inmueble.FindAsync(id);
             if (entity is null) return NotFound();
 
-            entity.Nombre = body.Nombre;
-            entity.Capacidad = body.Capacidad;
-            entity.Numero_Habitaciones = body.Numero_Habitaciones;
-            entity.Descripcion = body.Descripcion;
-            entity.Servicios_Incluidos = body.Servicios_Incluidos;
-            entity.Disponibilidad = body.Disponibilidad;
-            entity.Precio_Por_Noche = body.Precio_Por_Noche;
-            entity.Latitud = body.Latitud;
-            entity.Longitud = body.Longitud;
+            // Actualizar datos básicos
+            entity.Nombre = dto.Nombre;
+            entity.Capacidad = dto.Capacidad;
+            entity.Numero_Habitaciones = dto.Numero_Habitaciones;
+            entity.Descripcion = dto.Descripcion;
+            entity.Servicios_Incluidos = dto.Servicios_Incluidos;
+            entity.Disponibilidad = dto.Disponibilidad;
+            entity.Precio_Por_Noche = dto.Precio_Por_Noche;
+            entity.Latitud = dto.Latitud;
+            entity.Longitud = dto.Longitud;
+
+            if (imagen != null && imagen.Length > 0)
+            {
+                var acc = new Account(_config["Cloudinary:CloudName"], 
+                    _config["Cloudinary:ApiKey"], 
+                    _config["Cloudinary:ApiSecret"]);
+                var cloud = new Cloudinary(acc);
+
+                // Eliminar imagen anterior si existe
+                if (!string.IsNullOrEmpty(entity.Imagen_Habitacion))
+                {
+                    var publicId = ExtraerPublicIdDesdeUrl(entity.Imagen_Habitacion);
+                    if (!string.IsNullOrEmpty(publicId))
+                        await cloud.DestroyAsync(new DeletionParams(publicId) { ResourceType = ResourceType.Image });
+                }
+
+                // Subir nueva imagen con nombre único
+                var uploadParams = new ImageUploadParams
+                {
+                    File = new FileDescription(imagen.FileName, imagen.OpenReadStream()),
+                    Folder = "inmuebles",
+                    PublicId = $"inmueble_{id}_{Guid.NewGuid()}"
+                };
+                var result = await cloud.UploadAsync(uploadParams);
+                entity.Imagen_Habitacion = result.SecureUrl?.ToString();
+            }
 
             await _ctx.SaveChangesAsync();
-            return NoContent();
+
+            return Ok(entity);
+        }
+
+        // Método para extraer publicId desde URL
+        private string? ExtraerPublicIdDesdeUrl(string url)
+        {
+            if (string.IsNullOrEmpty(url)) return null;
+
+            // Patrón: tomar todo después de "/upload/v123456/" y quitar la extensión
+            var regex = new Regex(@"/upload/(?:v\d+/)?(.+)\.\w+$");
+            var match = regex.Match(url);
+
+            if (match.Success && match.Groups.Count > 1)
+                return match.Groups[1].Value; // ej. inmuebles/ns7bvyerbafzvdjeqm8g
+
+            return null;
         }
 
         [HttpDelete("{id:int}")]

@@ -1,11 +1,11 @@
 ﻿@model Frontend.WebApp.Models.PaginacionResponse
 
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = null;
+    ViewData["Title"] = "Mantenimiento de Clientes";
+    @Html.Partial("_NavAdmin")
     int totalPages = (int)Math.Ceiling((double)Model.TotalRecords / Model.PageSize);
 }
-
-
 
 <!DOCTYPE html>
 <html lang="es">

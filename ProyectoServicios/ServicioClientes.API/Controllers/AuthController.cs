@@ -99,24 +99,32 @@ namespace ServicioClientes.API.Controllers
                 return Unauthorized("Credenciales invalidas");
 
             int? adminId = null;
+            string nombreCompleto = "";
+
             if (usuario.Rol == "admin")
             {
-                adminId = _context.Administrador
-                    .Where(a => a.Correo == usuario.Correo)
-                    .Select(a => (int?)a.ID_Administrador)
-                    .FirstOrDefault();
+                var admin = _context.Administrador.FirstOrDefault(a => a.Correo == usuario.Correo);
+                adminId = admin?.ID_Administrador;
+                nombreCompleto = $"{admin?.Nombre} {admin?.Apellido}";
             }
-            var token = GenerateJwtToken(usuario, adminId);
+            else if (usuario.Rol == "cliente")
+            {
+                var cliente = _context.Cliente.FirstOrDefault(c => c.Correo == usuario.Correo);
+                nombreCompleto = $"{cliente?.Nombre} {cliente?.Apellido}";
+            }
+
+            var token = GenerateJwtToken(usuario, adminId, nombreCompleto);
 
             return Ok(new {token});
         }
 
-        private string GenerateJwtToken(Usuario usuario, int? adminId)
+        private string GenerateJwtToken(Usuario usuario, int? adminId, string nombreCompleto)
         {
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, usuario.Correo!),
-                new Claim(ClaimTypes.Role, usuario.Rol!)
+                new Claim(ClaimTypes.Role, usuario.Rol!),
+                new Claim("NombreCompleto", nombreCompleto)
             };
 
             if (adminId.HasValue)

@@ -1,11 +1,9 @@
-﻿@{
-    Layout = "~/Views/Shared/_Layout.cshtml";
-}
-@model Frontend.WebApp.Models.Cliente
+﻿@model Frontend.WebApp.Models.Cliente
 
 @{
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = null;
     ViewData["Title"] = "Detalles del Cliente";
+    @Html.Partial("_NavAdmin")
 }
 
 <!DOCTYPE html>
