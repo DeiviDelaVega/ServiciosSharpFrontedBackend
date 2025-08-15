@@ -1,0 +1,446 @@
+﻿@model Frontend.WebApp.Models.ReservaIndexViewModel
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    int totalPages = Model.totalPages;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary-dark': '#333333',
+                        'secondary-dark': '#555555',
+                        'table-header': '#333333',
+                        'table-row-even': '#f8f8f8',
+                        'table-row-hover': '#e8e8e8',
+                        'danger': '#cc0000',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="font-sans bg-[#f5f5f5] text-[#1a1a1a]">
+    <br />
+
+    <div class="max-w-7xl mx-auto my-5 p-6 bg-white rounded-lg shadow-xl">
+        <h2 class="text-3xl font-normal text-center text-[#333] mb-8 tracking-wider uppercase">
+            MANTENIMIENTO DE RESERVAS
+        </h2>
+
+        <div class="flex mb-4">
+            <button id="toggleFiltrosBtn" class="px-4 py-2 rounded-md text-sm font-medium text-white bg-secondary-dark hover:bg-primary-dark transition-colors duration-300">
+                <i class="fa fa-sliders-h mr-2"></i> Filtros
+            </button>
+        </div>
+
+    <div id="filtrosForm" class="hidden">
+    <form class="flex flex-wrap items-center gap-4 mb-6 p-5 bg-white rounded-md shadow-sm border border-[#e0e0e0]" onsubmit="event.preventDefault(); filtrarPorFechas();">
+        <div class="flex items-center gap-2">
+            <label for="fechaInicio" class="text-sm font-medium text-[#555]">Desde:</label>
+            <input type="date" id="fechaInicio" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2" />
+        </div>
+        
+        <div class="flex items-center gap-2">
+            <label for="fechaFin" class="text-sm font-medium text-[#555]">Hasta:</label>
+            <input type="date" id="fechaFin" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2" />
+        </div>
+
+        <button type="button" onclick="filtrarPorFechas()" class="px-4 py-2 bg-primary-dark text-white font-medium rounded-md hover:bg-secondary-dark transition duration-300">
+            Buscar
+        </button>
+
+        <div class="flex items-center gap-2">
+            <label for="estadoFiltro" class="text-sm font-medium text-[#555]">Estado:</label>
+            <select id="estadoFiltro" class="rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2">
+                <option value="">Seleccionar Estado</option>
+                <option value="Solicitado">Solicitado</option>
+                <option value="Aprobado">Aprobado</option>
+                <option value="Cancelado">Cancelado</option>
+                <option value="Finalizado">Finalizado</option>
+            </select>
+            
+            <button type="button" onclick="filtrarPorEstado()" class="px-4 py-2 bg-primary-dark text-white font-medium rounded-md hover:bg-secondary-dark transition duration-300">
+                Filtrar
+            </button>
+        </div>
+         <button type="button" onclick="limpiarFiltros()" class="px-4 py-2 bg-gray-500 text-white font-medium rounded-md hover:bg-gray-600 transition duration-300">
+            Limpiar
+        </button>
+    </form>
+</div>
+
+        <div class="overflow-x-auto mt-8">
+            <table id="reservas-table" class="min-w-full border-collapse">
+                <thead class="bg-table-header text-white uppercase text-xs tracking-wider">
+                    <tr>
+                        <th class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">ID</th>
+                        <th class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">Cliente</th>
+                        <th class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">Inmueble</th>
+                        <th class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">Fecha Inicio</th>
+                        <th class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">Fecha Fin</th>
+                        <th class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">Monto</th>
+                        <th class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">Estado</th>
+                        <th class="border border-[#e0e0e0] px-4 py-3 text-left font-bold">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaReservas" class="bg-white">
+                    @if (Model.reservas == null || !Model.reservas.Any())
+                    {
+                        <tr><td colspan="8" class="text-center text-gray-500">No se encontraron reservas.</td></tr>
+                    }
+                    else
+                    {
+                        int rowIndex = 0;
+                        foreach (var reserva in Model.reservas)
+                        {
+                            string rowClass = (rowIndex % 2 == 0) ? "bg-white" : "bg-[#f8f8f8]";
+                            <tr class="border border-[#e0e0e0] transition-colors duration-300 @rowClass hover:bg-[#e8e8e8]">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">@reserva.ID_Solicitud</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">@reserva.ID_Cliente</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">@reserva.ID_Inmueble</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">@reserva.Fecha_Inicio_Reserva.ToString("dd/MM/yyyy")</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">@reserva.Fecha_Fin_Reserva.ToString("dd/MM/yyyy")</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">S/. @reserva.Monto_Total.ToString("N2")</td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">
+                                    <span class="badge @GetEstadoBadgeClass(reserva.Estado_Reserva)">
+                                        @reserva.Estado_Reserva
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-[#555] text-center">
+                                    <div class="flex gap-2 justify-center">
+                                        <button onclick="verDetalle(@reserva.ID_Solicitud)" title="Detalle" class="text-secondary-dark hover:text-primary-dark transition-colors duration-300">
+                                            <i class="fa fa-magnifying-glass text-lg"></i>
+                                        </button>
+                                        <button onclick="cambiarEstado(@reserva.ID_Solicitud)" title="Editar" class="text-secondary-dark hover:text-primary-dark transition-colors duration-300">
+                                            <i class="fa fa-pen text-lg"></i>
+                                        </button>
+                                        <button onclick="confirmarEliminacion(@reserva.ID_Solicitud)" title="Eliminar" class="text-danger hover:text-primary-dark transition-colors duration-300">
+                                            <i class="fa fa-trash text-lg"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            rowIndex++;
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginación -->
+        <div id="pagination-controls" class="mt-8 flex justify-center items-center gap-2">
+            @if (totalPages > 1)
+            {
+                <a href="javascript:void(0)" onclick="cambiarPagina(0)"
+                   class="px-4 py-2 text-sm font-semibold rounded-md transition duration-300
+                      @(Model.currentPage == 0 ? "bg-primary-dark text-white" : "bg-white text-secondary-dark hover:bg-gray-200")">
+                    Primera
+                </a>
+
+                <a href="javascript:void(0)" onclick="cambiarPagina(@(Model.currentPage - 1))"
+                   class="px-4 py-2 text-sm font-semibold rounded-md transition duration-300
+                      @(Model.currentPage <= 0 ? "text-gray-400 bg-gray-200 cursor-not-allowed" : "bg-white text-secondary-dark hover:bg-gray-200")">
+                    &laquo; Prev
+                </a>
+
+                @for (int i = 0; i < totalPages; i++)
+                {
+                    <a href="javascript:void(0)" onclick="cambiarPagina(@i)"
+                       class="px-4 py-2 text-sm font-semibold rounded-md transition duration-300
+                              @(i == Model.currentPage ? "bg-primary-dark text-white" : "bg-white text-secondary-dark hover:bg-gray-200")">
+                        @(i + 1)
+                    </a>
+                }
+
+                <a href="javascript:void(0)" onclick="cambiarPagina(@(Model.currentPage + 1))"
+                   class="px-4 py-2 text-sm font-semibold rounded-md transition duration-300
+                      @(Model.currentPage >= totalPages - 1 ? "text-gray-400 bg-gray-200 cursor-not-allowed" : "bg-white text-secondary-dark hover:bg-gray-200")">
+                    Next &raquo;
+                </a>
+
+                <a href="javascript:void(0)" onclick="cambiarPagina(@(totalPages - 1))"
+                   class="px-4 py-2 text-sm font-semibold rounded-md transition duration-300
+                      @(Model.currentPage == totalPages - 1 ? "bg-primary-dark text-white" : "bg-white text-secondary-dark hover:bg-gray-200")">
+                    Última
+                </a>
+            }
+        </div>
+    </div>
+
+    <br />
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const toggleFiltrosBtn = document.getElementById('toggleFiltrosBtn');
+        const filtrosForm = document.getElementById('filtrosForm');
+
+        // Mantener estado de filtro visible con localStorage
+        const visible = localStorage.getItem("filtrosReservasVisible") === "true";
+        if (visible) {
+            filtrosForm.classList.remove('hidden');
+            toggleFiltrosBtn.textContent = 'Ocultar Filtros';
+        }
+
+        toggleFiltrosBtn.addEventListener("click", () => {
+            const currentlyVisible = !filtrosForm.classList.contains('hidden');
+            if (currentlyVisible) {
+                filtrosForm.classList.add('hidden');
+                toggleFiltrosBtn.innerHTML = '<i class="fa fa-sliders-h mr-2"></i> Filtros';
+            } else {
+                filtrosForm.classList.remove('hidden');
+                toggleFiltrosBtn.textContent = 'Ocultar Filtros';
+            }
+            localStorage.setItem("filtrosReservasVisible", !currentlyVisible);
+        });
+
+        // Restaurar filtros en los inputs al cargar
+        const fechaInicio = localStorage.getItem('reservaFiltroFechaInicio');
+        const fechaFin = localStorage.getItem('reservaFiltroFechaFin');
+        const estado = localStorage.getItem('reservaFiltroEstado');
+        if (fechaInicio) document.getElementById('fechaInicio').value = fechaInicio;
+        if (fechaFin) document.getElementById('fechaFin').value = fechaFin;
+        if (estado) document.getElementById('estadoFiltro').value = estado;
+
+        // Si hay filtros guardados, aplicar automáticamente al cargar
+        if (fechaInicio && fechaFin) {
+            fetchReservasFiltradas(0);
+        } else if (estado) {
+            fetchReservasFiltradas(0);
+        }
+    });
+
+    function filtrarPorFechas() {
+        const fechaInicio = document.getElementById('fechaInicio').value;
+        const fechaFin = document.getElementById('fechaFin').value;
+        if (!fechaInicio || !fechaFin) {
+            Swal.fire('Selecciona ambas fechas', '', 'warning');
+            return;
+        }
+        localStorage.setItem('reservaFiltroFechaInicio', fechaInicio);
+        localStorage.setItem('reservaFiltroFechaFin', fechaFin);
+        localStorage.removeItem('reservaFiltroEstado');
+        fetchReservasFiltradas(0);
+    }
+
+    function filtrarPorEstado() {
+        const estado = document.getElementById('estadoFiltro').value;
+        if (!estado) {
+            Swal.fire('Selecciona un estado', '', 'warning');
+            return;
+        }
+        localStorage.setItem('reservaFiltroEstado', estado);
+        localStorage.removeItem('reservaFiltroFechaInicio');
+        localStorage.removeItem('reservaFiltroFechaFin');
+        fetchReservasFiltradas(0);
+    }
+
+    function fetchReservasFiltradas(page) {
+        const fechaInicio = localStorage.getItem('reservaFiltroFechaInicio');
+        const fechaFin = localStorage.getItem('reservaFiltroFechaFin');
+        const estado = localStorage.getItem('reservaFiltroEstado');
+
+        if (fechaInicio && fechaFin) {
+            fetch('/Reserva/FiltrarPorFechas', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({
+                    fechaInicio: fechaInicio + 'T00:00:00',
+                    fechaFin: fechaFin + 'T23:59:59',
+                    page: page
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    Swal.fire(data.error, '', 'error');
+                    return;
+                }
+                renderReservas(data.reservas, data.currentPage, data.totalPages);
+            })
+            .catch(() => Swal.fire('Error al filtrar por fechas', '', 'error'));
+        } else if (estado) {
+            fetch('/Reserva/FiltrarPorEstado', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ estado: estado, page: page })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    Swal.fire(data.error, '', 'error');
+                    return;
+                }
+                renderReservas(data.reservas, data.currentPage, data.totalPages);
+            })
+            .catch(() => Swal.fire('Error al filtrar por estado', '', 'error'));
+        } else {
+            window.location.href = '/Reserva/Index?page=' + page;
+        }
+    }
+
+    function limpiarFiltros() {
+        document.getElementById('fechaInicio').value = '';
+        document.getElementById('fechaFin').value = '';
+        document.getElementById('estadoFiltro').value = '';
+        localStorage.removeItem('reservaFiltroFechaInicio');
+        localStorage.removeItem('reservaFiltroFechaFin');
+        localStorage.removeItem('reservaFiltroEstado');
+        location.reload();
+    }
+
+    function cambiarPagina(page) {
+        fetchReservasFiltradas(page);
+    }
+
+    function renderReservas(reservas, currentPage, totalPages) {
+        const tbody = document.getElementById('tablaReservas');
+        tbody.innerHTML = '';
+        if (!reservas || reservas.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center text-gray-500">No se encontraron reservas.</td></tr>`;
+            return;
+        }
+        reservas.forEach((reserva, rowIndex) => {
+            const rowClass = (rowIndex % 2 === 0) ? "bg-white" : "bg-[#f8f8f8]";
+            const id = reserva.iD_Solicitud ?? reserva.ID_Solicitud;
+            const cliente = reserva.iD_Cliente ?? reserva.ID_Cliente;
+            const inmueble = reserva.iD_Inmueble ?? reserva.ID_Inmueble;
+            const fechaInicio = reserva.fecha_Inicio_Reserva ?? reserva.Fecha_Inicio_Reserva;
+            const fechaFin = reserva.fecha_Fin_Reserva ?? reserva.Fecha_Fin_Reserva;
+            const monto = reserva.monto_Total ?? reserva.Monto_Total;
+            const estado = reserva.estado_Reserva ?? reserva.Estado_Reserva;
+
+            tbody.innerHTML += `
+                <tr class="border border-[#e0e0e0] transition-colors duration-300 ${rowClass} hover:bg-[#e8e8e8]">
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">${id}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">${cliente}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">${inmueble}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">${new Date(fechaInicio).toLocaleDateString()}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">${new Date(fechaFin).toLocaleDateString()}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]">S/. ${parseFloat(monto).toFixed(2)}</td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm text-[#333]"><span class="badge">${estado}</span></td>
+                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-[#555] text-center">
+                        <div class="flex gap-2 justify-center">
+                            <button onclick="verDetalle(${id})" title="Detalle" class="text-secondary-dark hover:text-primary-dark transition-colors duration-300">
+                                <i class="fa fa-magnifying-glass text-lg"></i>
+                            </button>
+                            <button onclick="cambiarEstado(${id})" title="Editar" class="text-secondary-dark hover:text-primary-dark transition-colors duration-300">
+                                <i class="fa fa-pen text-lg"></i>
+                            </button>
+                            <button onclick="confirmarEliminacion(${id})" title="Eliminar" class="text-danger hover:text-primary-dark transition-colors duration-300">
+                                <i class="fa fa-trash text-lg"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function verDetalle(id) {
+        window.location.href = '/Reserva/Detalle/' + id;
+    }
+
+    function cambiarEstado(id) {
+        if (!id || id <= 0) {
+            Swal.fire('ID de reserva inválido.', '', 'warning');
+            return;
+        }
+        Swal.fire({
+            title: 'Actualizar estado',
+            input: 'select',
+            inputOptions: {
+                'Solicitado': 'Solicitado',
+                'Aprobado': 'Aprobado',
+                'Cancelado': 'Cancelado',
+                'Finalizado': 'Finalizado'
+            },
+            inputPlaceholder: 'Selecciona el nuevo estado',
+            showCancelButton: true,
+            confirmButtonText: 'Actualizar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed && result.value) {
+                fetch(`/Reserva/ActualizarEstado?id=${id}&estado=${encodeURIComponent(result.value)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    Swal.fire(data.message || 'Estado actualizado', '', data.success ? 'success' : 'error');
+                    if (data.success) location.reload();
+                })
+                .catch(() => Swal.fire('Error al actualizar estado', '', 'error'));
+            }
+        });
+    }
+
+    function confirmarEliminacion(id) {
+        if (!id || id <= 0) {
+            Swal.fire('ID de reserva inválido.', '', 'warning');
+            return;
+        }
+        Swal.fire({
+            title: '¿Eliminar reserva?',
+            text: 'Esta acción no se puede deshacer',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/Reserva/Eliminar?id=${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    Swal.fire(data.message || 'Reserva eliminada', '', data.success ? 'success' : 'error');
+                    if (data.success) location.reload();
+                })
+                .catch(() => Swal.fire('Error al eliminar reserva', '', 'error'));
+            }
+        });
+    }
+</script>
+</body>
+</html>
+
+@functions {
+    string GetEstadoBadgeClass(string estado)
+    {
+        return estado switch
+        {
+            "Solicitado" => "bg-warning text-dark",
+            "Aprobado" => "bg-success",
+            "Cancelado" => "bg-danger",
+            "Finalizado" => "bg-info",
+            _ => "bg-secondary"
+        };
+    }
+}
