@@ -17,6 +17,10 @@ namespace Shared.Models
         public DateTime FechaRegistro { get; set; }
         public string? Correo { get; set; }
         public string? Clave { get; set; }
-        public string? Estado { get; set; } 
+        public string? Estado { get; set; }
+
+
+        //Para el filtro
+        public int TotalReservas { get; set; }
     }
 }
