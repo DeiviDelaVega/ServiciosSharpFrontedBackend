@@ -36,7 +36,7 @@ namespace Frontend.WebApp.Controllers
 
         //Mantenimiento Cliente
 
-        public async Task<IActionResult> ListClientes(int pageNumber = 1, int pageSize = 5, string filtro = null)
+        public async Task<IActionResult> ListClientes(int pageNumber = 1, int pageSize = 5, string filtro = null!)
         {
             ViewData["Filtro"] = filtro;
             HttpResponseMessage response;
