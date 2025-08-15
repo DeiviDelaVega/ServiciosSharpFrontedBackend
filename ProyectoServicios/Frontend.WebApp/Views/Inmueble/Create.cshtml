@@ -1,117 +1,185 @@
 ﻿@model Frontend.WebApp.Models.CrearInmuebleViewModel
-@{
-    ViewData["Title"] = "Create";
-}
 
-<h2>Nuevo Inmueble</h2>
+@{
+    Layout = null;
+    ViewData["Title"] = "Crear Nuevos Inmuebles";
+    @Html.Partial("_NavAdmin")
+}
 
 @if (ViewBag.Mensaje != null)
 {
     <div class="alert alert-danger">@ViewBag.Mensaje</div>
 }
 
-<div class="row">
-    <div class="col-md-6">
-        <form asp-action="Create" method="post" enctype="multipart/form-data">
+<link rel="stylesheet" href="@Url.Content("~/css/MantInmueble.css")" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<br />
+<h2 class="text-center">REGISTRO DE INMUEBLES</h2>
+<div class="container mt-4">
+    <div class="form-horizontal">
+        <form asp-action="Create" method="post" enctype="multipart/form-data" id="form-registro">
             @Html.AntiForgeryToken()
+            <h4 class="text-center">Registrar un nuevo inmueble en el sistema</h4>
+            <hr />
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
-            <div class="mb-3">
-                <label asp-for="Nombre" class="form-label"></label>
-                <input asp-for="Nombre" class="form-control" />
-                <span asp-validation-for="Nombre" class="text-danger"></span>
+            <!-- Nombre y Capacidad -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="Nombre" class="control-label">Nombre</label>
+                    <input asp-for="Nombre" class="form-control @(ViewData.ModelState["Nombre"]?.Errors.Count > 0 ? "is-invalid" : "")" placeholder="Nombre del inmueble" />
+                    <span asp-validation-for="Nombre" class="invalid-feedback"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Capacidad" class="control-label">Capacidad</label>
+                    <input asp-for="Capacidad" type="number" min="1" step="1" class="form-control @(ViewData.ModelState["Capacidad"]?.Errors.Count > 0 ? "is-invalid" : "")" placeholder="Capacidad del inmueble" />
+                    <span asp-validation-for="Capacidad" class="invalid-feedback"></span>
+                </div>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="Capacidad" class="form-label"></label>
-                <input asp-for="Capacidad" type="number" class="form-control" />
-                <span asp-validation-for="Capacidad" class="text-danger"></span>
+            <!-- Número de habitaciones y Precio por noche -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="Numero_Habitaciones" class="control-label">Número de Habitaciones</label>
+                    <input asp-for="Numero_Habitaciones" type="number" min="1" step="1" class="form-control @(ViewData.ModelState["Numero_Habitaciones"]?.Errors.Count > 0 ? "is-invalid" : "")" placeholder="Número de habitaciones" />
+                    <span asp-validation-for="Numero_Habitaciones" class="invalid-feedback"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="Precio_Por_Noche" class="control-label">Precio por Noche</label>
+                    <input asp-for="Precio_Por_Noche" type="number" min="0.01" step="0.01" class="form-control @(ViewData.ModelState["Precio_Por_Noche"]?.Errors.Count > 0 ? "is-invalid" : "")" placeholder="Precio por noche" />
+                    <span asp-validation-for="Precio_Por_Noche" class="invalid-feedback"></span>
+                </div>
             </div>
 
+            <!-- Descripción -->
             <div class="mb-3">
-                <label asp-for="Numero_Habitaciones" class="form-label"></label>
-                <input asp-for="Numero_Habitaciones" type="number" class="form-control" />
-                <span asp-validation-for="Numero_Habitaciones" class="text-danger"></span>
+                <label asp-for="Descripcion" class="control-label">Descripción</label>
+                <textarea asp-for="Descripcion" class="form-control1 @(ViewData.ModelState["Descripcion"]?.Errors.Count > 0 ? "is-invalid" : "")" rows="3" placeholder="Descripción del inmueble"></textarea>
+                <span asp-validation-for="Descripcion" class="invalid-feedback"></span>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="Precio_Por_Noche" class="form-label"></label>
-                <input asp-for="Precio_Por_Noche" type="number" step="0.01" class="form-control" />
-                <small class="text-muted">Usa punto decimal (ej. 400.00)</small>
-                <span asp-validation-for="Precio_Por_Noche" class="text-danger"></span>
+            <!-- Servicios Incluidos y Disponibilidad -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label asp-for="Servicios_Incluidos" class="control-label">Servicios Incluidos</label>
+                    <input asp-for="Servicios_Incluidos" class="form-control @(ViewData.ModelState["Servicios_Incluidos"]?.Errors.Count > 0 ? "is-invalid" : "")" placeholder="Servicios incluidos" maxlength="200" />
+                    <span asp-validation-for="Servicios_Incluidos" class="invalid-feedback"></span>
+                </div>
+                <div class="form-group col-md-6">
+                    <label asp-for="Disponibilidad" class="control-label">Disponibilidad</label>
+                    <select asp-for="Disponibilidad" class="form-control">
+                        <option value="Si" selected="@Model.Disponibilidad == " Si"">Si</option>
+                        <option value="No" selected="@Model.Disponibilidad == " No"">No</option>
+                    </select>
+                    <span asp-validation-for="Disponibilidad" class="invalid-feedback"></span>
+                </div>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="Disponibilidad" class="form-label"></label>
-                <select asp-for="Disponibilidad" class="form-select">
-                    <option value="Si">Si</option>
-                    <option value="No">No</option>
-                </select>
-                <span asp-validation-for="Disponibilidad" class="text-danger"></span>
+            <!-- Imagen -->
+            <div class="mb-3 text-center d-flex flex-column align-items-center">
+                <label class="control-label">Imagen Habitación</label>
+                <input asp-for="Imagen" type="file" class="form-control @(ViewData.ModelState["Imagen"]?.Errors.Count > 0 ? "is-invalid" : "")" accept="image/*" onchange="validarImagen(event)"/>
+                <span asp-validation-for="Imagen" class="invalid-feedback" id="error-imagen"></span>
             </div>
-
-            <div class="mb-3">
-                <label asp-for="Servicios_Incluidos" class="form-label"></label>
-                <input asp-for="Servicios_Incluidos" class="form-control" />
-                <span asp-validation-for="Servicios_Incluidos" class="text-danger"></span>
+            <br />
+            <!-- Mapa -->
+            <div class="mb-3 text-center">
+                <label class="control-label">Ubicación en el mapa</label>
+                <div id="map" class="map-wrapper" style="height: 400px;"></div>
+                <input asp-for="Latitud" id="Latitud" type="hidden" />
+                <input asp-for="Longitud" id="Longitud" type="hidden" />
+                <span asp-validation-for="Latitud" class="invalid-feedback"></span>
+                <span asp-validation-for="Longitud" class="invalid-feedback"></span>
             </div>
-
-            <div class="mb-3">
-                <label asp-for="Descripcion" class="form-label"></label>
-                <textarea asp-for="Descripcion" rows="3" class="form-control"></textarea>
-                <span asp-validation-for="Descripcion" class="text-danger"></span>
-            </div>
-
-            <!-- Archivo: el API espera el campo como "imagen" -->
-            <div class="mb-3">
-                <label class="form-label">Imagen (Cloudinary)</label>
-                <input asp-for="Imagen" type="file" class="form-control" />
-                <small class="text-muted">Se sube a Cloudinary; el API guardará la URL.</small>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Latitud</label>
-                <input asp-for="Latitud" type="text" class="form-control" id="Latitud" readonly />
-                <span asp-validation-for="Latitud" class="text-danger"></span>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Longitud</label>
-                <input asp-for="Longitud" type="text" class="form-control" id="Longitud" readonly />
-                <span asp-validation-for="Longitud" class="text-danger"></span>
-            </div>
-
-            <div class="mt-3">
-                <button type="submit" class="btn btn-success">Guardar</button>
+            <!-- Botones -->
+            <div class="button-group-container mt-4 text-center">
+                <button type="button" class="btn btn-dark" style="margin-right: 17px;" onclick="confirmarRegistro()">Guardar</button>
                 <a asp-action="Index" class="btn btn-secondary">Volver</a>
             </div>
         </form>
     </div>
-
-    <div class="col-md-6">
-        <label class="form-label">Ubicación (clic en el mapa)</label>
-        <div id="map" style="height:420px;border:1px solid #ddd;border-radius:6px"></div>
-    </div>
 </div>
 
-@section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-    <script>
-        let map, marker;
-        function initMap() {
-          const start = { lat: -12.0464, lng: -77.0428 }; // Lima por defecto
-          map = new google.maps.Map(document.getElementById("map"), { center: start, zoom: 12 });
-
-          map.addListener("click", (e) => {
-            const pos = e.latLng;
-            if (!marker) marker = new google.maps.Marker({ map: map });
-            marker.setPosition(pos);
-            // setea valores con punto decimal, 6 decimales
-            document.getElementById("Latitud").value = pos.lat().toFixed(6);
-            document.getElementById("Longitud").value = pos.lng().toFixed(6);
-          });
+<script>
+    function validarImagen(event) {
+        const input = event.target;
+        const archivo = input.files[0];
+        const errorDiv = document.getElementById("error-imagen");
+        errorDiv.textContent = "";
+        if (archivo) {
+            const tiposPermitidos = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+            const tamañoMaxMB = 10;
+            if (!tiposPermitidos.includes(archivo.type)) {
+                errorDiv.textContent = "Solo se permiten JPG, PNG, GIF o WEBP.";
+                input.value = "";
+            } else if (archivo.size > tamañoMaxMB * 1024 * 1024) {
+                errorDiv.textContent = "La imagen no debe superar " + tamañoMaxMB + "MB.";
+                input.value = "";
+            }
         }
-        window.initMap = initMap;
-    </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCc1pV5K0s9Z7xGUUU03n6zBhKemKLiRx8&callback=initMap" async defer></script>
-}
+    }
+
+        function confirmarRegistro() {
+        Swal.fire({
+            title: '¿Estás seguro de registrar este inmueble?',
+            text: "Luego podrás editarlo si es necesario",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, registrar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.getElementById('form-registro');
+                const formData = new FormData(form);
+
+                fetch(form.action, {
+                    method: form.method,
+                    body: formData
+                })
+                .then(async res => {
+                    const data = await res.json(); // JSON del servidor
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Agregado!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonText: 'Aceptar',
+                            customClass: { popup: 'swal-custom-popup' }
+                        }).then(() => {
+                            window.location.href = "/Inmueble/Index";
+                        });
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire('Error', 'Ocurrió un error al procesar el formulario', 'error');
+                });
+            }
+        });
+    }
+</script>
+
+<partial name="_ValidationScriptsPartial" />
+<script>
+    let map, marker;
+    function initMap() {
+        const start = { lat: -12.0464, lng: -77.0428 }; // Lima por defecto
+        map = new google.maps.Map(document.getElementById("map"), { center: start, zoom: 12 });
+
+        map.addListener("click", (e) => {
+        const pos = e.latLng;
+        if (!marker) marker = new google.maps.Marker({ map: map });
+        marker.setPosition(pos);
+        // setea valores con punto decimal, 6 decimales
+        document.getElementById("Latitud").value = pos.lat().toFixed(6);
+        document.getElementById("Longitud").value = pos.lng().toFixed(6);
+        });
+    }
+    window.initMap = initMap;
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCc1pV5K0s9Z7xGUUU03n6zBhKemKLiRx8&callback=initMap" async defer></script>

@@ -1,0 +1,66 @@
+﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+@{
+    var currentController = (ViewContext?.RouteData?.Values["controller"] ?? "").ToString();
+    var currentAction = (ViewContext?.RouteData?.Values["action"] ?? "").ToString();
+}
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <title>@ViewData["Title"] - Web de Reservas</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Frontend.WebApp.styles.css" asp-append-version="true" />
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark navbar-custom">
+            <div class="container d-flex align-items-center">
+                <a class="navbar-brand" href="#" style="font-size: 24px"><strong>Monterrico Polo Aparts</strong></a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavCliente"
+                        aria-controls="navbarNavCliente" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNavCliente">
+                    <ul class="navbar-nav ms-auto d-flex align-items-center">
+                        <li class="nav-item mx-2">
+                            <a asp-controller="Cliente" asp-action="Index"
+                               class="nav-link px-3 rounded @(currentAction == "Index" && currentController == "Cliente" ? "active" : "")">
+                                Inicio
+                            </a>
+                        </li>
+
+                        <li class="nav-item mx-2">
+                            <a asp-controller="Reserva" asp-action="MisReservas"
+                               class="nav-link px-3 rounded @(currentController == "Reserva" && currentAction == "MisReservas" ? "active" : "")">
+                                Mis Reservas
+                            </a>
+                        </li>
+
+                        <li class="nav-item mx-2">
+                            <a asp-controller="Inmueble" asp-action="Catalogo"
+                               class="nav-link px-3 rounded @(currentController == "Inmueble" && currentAction == "Catalogo" ? "active" : "")">
+                                Ver Inmuebles
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a asp-controller="Auth" asp-action="Logout"
+                               class="btn btn-danger text-white">
+                                Cerrar Sesión
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>

@@ -1,11 +1,36 @@
-﻿@{
+﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+@{
+    Layout = null;
     ViewData["Title"] = "Panel de Cliente";
+    @Html.Partial("_NavCliente")
 }
+
 <head>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
 </head>
-<h2>Bienvenido Cliente</h2>
-<p>Esta es la página principal para clientes.</p>
-<a href="@Url.Action("Logout", "Auth")">Cerrar sesión</a>
+
+<br />
+<body>
+	<br />
+	<link rel="stylesheet" href="@Url.Content("~/css/PaginaInicioAdminCliente.css")" />
+	<div class="fade-in">
+		@if (HttpContextAccessor.HttpContext.Session.GetString("nombreUsuario") != null)
+		{
+			<h1 class="text-center">Hola <span>@HttpContextAccessor.HttpContext.Session.GetString("nombreUsuario")</span></h1>
+		}
+		<h2 class="text-center">
+			Bienvenido a la vista de CLIENTE
+		</h2>
+		<br>
+		<div class="banner-container">
+			<img src="@Url.Content("~/imagenes/baner1.jpg")" id="baner" />
+		</div>
+		<br>
+	</div>
+	<script src="@Url.Content("~/js/ClienteJs.js")"></script>
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>

@@ -49,6 +49,9 @@ namespace Frontend.WebApp.Controllers
                 var handler = new JwtSecurityTokenHandler();
                 var token = handler.ReadJwtToken(tokenObj.Token);
                 var rol = token.Claims.First(c => c.Type == ClaimTypes.Role).Value;
+                var nombreCompleto = token.Claims.FirstOrDefault(c => c.Type == "NombreCompleto")?.Value;
+
+                HttpContext.Session.SetString("nombreUsuario", nombreCompleto ?? "");
 
                 if (rol == "admin")
                     return RedirectToAction("Index", "Admin");

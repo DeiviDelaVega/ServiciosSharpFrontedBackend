@@ -1,0 +1,85 @@
+﻿@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+
+@{
+    var currentController = (ViewContext?.RouteData?.Values["controller"] ?? "").ToString();
+    var currentAction = (ViewContext?.RouteData?.Values["action"] ?? "").ToString();
+}
+
+<head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <title>@ViewData["Title"] - Web de Reservas</title>
+    <link rel="stylesheet" href="~/Frontend.WebApp.styles.css" asp-append-version="true" />
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark navbar-custom">
+            <div class="container d-flex align-items-center">
+                <a class="navbar-brand" href="#" style="font-size: 24px"><strong>Monterrico Polo Aparts</strong></a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAdmin"
+                        aria-controls="navbarNavAdmin" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNavAdmin">
+                    <ul class="navbar-nav ms-auto d-flex align-items-center">
+                        <li class="nav-item mx-2">
+                            <a asp-controller="Admin" asp-action="Index"
+                               class="nav-link px-3 rounded @(currentAction == "Index" && currentController == "Admin" ? "active" : "")">
+                                Inicio
+                            </a>
+                        </li>
+
+                        <li class="nav-item mx-2">
+                            <a asp-controller="Inmueble" asp-action="Index"
+                               class="nav-link px-3 rounded @((currentController == "Inmueble" && (currentAction == "Index" || currentAction == "Details" || currentAction == "Edit" || currentAction == "Create")) ? "active" : "")">
+                                Mantenimiento de Inmueble
+                            </a>
+                        </li>
+
+                        <li class="nav-item mx-2">
+                            <a asp-controller="Cliente" asp-action="ListClientes"
+                               class="nav-link px-3 rounded @((currentController == "Cliente" && (currentAction == "ListClientes" || currentAction == "Details" || currentAction == "Edit")) ? "active" : "")">
+                                Mantenimiento de Clientes
+                            </a>
+                        </li>
+
+                        <li class="nav-item mx-2">
+                            <a asp-controller="Reserva" asp-action="Index"
+                               class="nav-link px-3 rounded @((currentController == "Reserva" && (currentAction == "Index" || currentAction == "Detalle")) ? "active" : "")">
+                                Mantenimiento de Reserva
+                            </a>
+                        </li>
+
+                        <li class="nav-item dropdown mx-2">
+                            <a class="nav-link dropdown-toggle px-3 rounded @(currentController == "Reportes" ? "active" : "")"
+                               href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Reportes
+                            </a>
+                            <ul class="dropdown-menu text-center">
+                                <li>
+                                    <a asp-controller="Reportes" asp-action="ClientesConMasReservas" class="dropdown-item">Clientes con más reservas</a>
+                                </li>
+                                <li>
+                                    <a asp-controller="Reportes" asp-action="InmueblesMasReservados" class="dropdown-item">Inmuebles más reservados</a>
+                                </li>
+                            </ul>
+                        </li>
+
+                        <li class="nav-item">
+                            <a asp-controller="Auth" asp-action="Logout"
+                               class="btn btn-danger text-white">
+                                Cerrar Sesión
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>

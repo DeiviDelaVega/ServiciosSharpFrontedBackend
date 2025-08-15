@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Globalization;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using Shared.Models;
-using System.Globalization;
 using Frontend.WebApp.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Shared.Models;
 
 namespace Frontend.WebApp.Controllers
 {
@@ -25,8 +26,9 @@ namespace Frontend.WebApp.Controllers
         }
 
         // LISTA
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string filtro, string disponibilidad, string adminNombre, int pagina = 1, int pageSize = 5)
         {
+            // Traer todos los inmuebles desde la API
             var res = await Api().GetAsync("api/inmuebles");
             if (!res.IsSuccessStatusCode)
             {
@@ -34,8 +36,68 @@ namespace Frontend.WebApp.Controllers
                 return View(new List<InmuebleDto>());
             }
 
-            var data = await res.Content.ReadFromJsonAsync<List<InmuebleDto>>();
-            return View(data ?? new List<InmuebleDto>());
+            var data = await res.Content.ReadFromJsonAsync<List<InmuebleDto>>() ?? new List<InmuebleDto>();
+
+            // -----------------------
+            // Aplicar filtros
+            // -----------------------
+
+            // Filtro por nombre o servicios
+            if (!string.IsNullOrEmpty(filtro))
+            {
+                data = data.Where(i => (i.Nombre?.Contains(filtro, StringComparison.OrdinalIgnoreCase) ?? false)
+                                     || (i.ServiciosIncluidos?.Contains(filtro, StringComparison.OrdinalIgnoreCase) ?? false))
+                           .ToList();
+            }
+
+            // Filtro por disponibilidad
+            if (!string.IsNullOrEmpty(disponibilidad))
+            {
+                data = data.Where(i => i.Disponibilidad?.Equals(disponibilidad, StringComparison.OrdinalIgnoreCase) ?? false)
+                           .ToList();
+            }
+
+            // Filtro por nombre del administrador
+            if (!string.IsNullOrEmpty(adminNombre))
+            {
+                data = data.Where(i => i.Nombre?.Contains(adminNombre, StringComparison.OrdinalIgnoreCase) ?? false)
+                           .ToList();
+            }
+
+            // Ordenar por Id
+            data = data.OrderBy(i => i.IdInmueble).ToList();
+
+            // -----------------------
+            // Paginación
+            // -----------------------
+            var totalItems = data.Count;
+            var totalPaginas = (int)Math.Ceiling(totalItems / (double)pageSize);
+            pagina = Math.Clamp(pagina, 1, totalPaginas);
+
+            var paginaActual = data.Skip((pagina - 1) * pageSize).Take(pageSize).ToList();
+
+            // -----------------------
+            // Valores para la vista
+            // -----------------------
+            ViewBag.PaginaActual = pagina;
+            ViewBag.TotalPaginas = totalPaginas;
+            ViewBag.Filtro = filtro;
+            ViewBag.Disponibilidad = disponibilidad;
+            ViewBag.AdminNombre = adminNombre;
+
+            // Lista de administradores para el dropdown
+            var resAdmins = await Api().GetAsync("api/cliente"); // suponiendo que aquí traes admins
+            if (resAdmins.IsSuccessStatusCode)
+            {
+                var admins = await resAdmins.Content.ReadFromJsonAsync<List<AdministradorDto>>();
+                ViewBag.Administradores = new SelectList(admins, "Nombre", "Nombre", adminNombre);
+            }
+            else
+            {
+                ViewBag.Administradores = new SelectList(new List<AdministradorDto>(), "Nombre", "Nombre");
+            }
+
+            return View(paginaActual);
         }
 
         // CREAR (GET)
@@ -46,23 +108,18 @@ namespace Frontend.WebApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CrearInmuebleViewModel vm)
         {
-            if (!ModelState.IsValid) return View(vm);
+            if (!ModelState.IsValid)
+                return Json(new { success = false, message = "Por favor complete todos los campos correctamente." });
 
             using var form = new MultipartFormDataContent();
-
             form.Add(new StringContent(vm.Nombre ?? ""), "Nombre");
             form.Add(new StringContent(vm.Capacidad.ToString()), "Capacidad");
             form.Add(new StringContent(vm.Numero_Habitaciones.ToString()), "Numero_Habitaciones");
             form.Add(new StringContent(vm.Descripcion ?? ""), "Descripcion");
             form.Add(new StringContent(vm.Servicios_Incluidos ?? ""), "Servicios_Incluidos");
             form.Add(new StringContent(vm.Disponibilidad ?? "Si"), "Disponibilidad");
+            form.Add(new StringContent(vm.Precio_Por_Noche.ToString(CultureInfo.InvariantCulture)), "Precio_Por_Noche");
 
-            // Precio: punto decimal garantizado
-            form.Add(new StringContent(
-                vm.Precio_Por_Noche.ToString(CultureInfo.InvariantCulture)
-            ), "Precio_Por_Noche");
-
-            // Lat/Long: envía TEXTO, normalizado a punto
             var lat = (vm.Latitud ?? "").Replace(',', '.');
             var lng = (vm.Longitud ?? "").Replace(',', '.');
             form.Add(new StringContent(lat), "Latitud");
@@ -74,8 +131,7 @@ namespace Frontend.WebApp.Controllers
                 await vm.Imagen.CopyToAsync(ms);
                 ms.Position = 0;
                 var fileContent = new ByteArrayContent(ms.ToArray());
-                fileContent.Headers.ContentType =
-                    new System.Net.Http.Headers.MediaTypeHeaderValue(vm.Imagen.ContentType);
+                fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(vm.Imagen.ContentType);
                 form.Add(fileContent, "imagen", vm.Imagen.FileName);
             }
 
@@ -83,14 +139,12 @@ namespace Frontend.WebApp.Controllers
             if (!res.IsSuccessStatusCode)
             {
                 var body = await res.Content.ReadAsStringAsync();
-                ViewBag.Mensaje = $"HTTP {(int)res.StatusCode} ({res.StatusCode}). {body}";
-                return View(vm);
+                return Json(new { success = false, message = $"HTTP {(int)res.StatusCode}: {body}" });
             }
 
-            TempData["Msg"] = "Inmueble creado correctamente.";
-            return RedirectToAction(nameof(Index));
+            // ✅ Devuelve JSON indicando éxito
+            return Json(new { success = true, message = "Inmueble creado correctamente." });
         }
-
 
 
         // EDITAR (GET)
@@ -107,18 +161,41 @@ namespace Frontend.WebApp.Controllers
             return View(model);
         }
 
-        // EDITAR (POST) – JSON (no cambia imagen)
+        // EDITAR (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(InmuebleDto dto)
+        public async Task<IActionResult> Edit(InmuebleDto dto, IFormFile nuevaImagen)
         {
-            var res = await Api().PutAsJsonAsync($"api/inmuebles/{dto.IdInmueble}", dto);
+            using var form = new MultipartFormDataContent();
+
+            form.Add(new StringContent(dto.Nombre ?? ""), "Nombre");
+            form.Add(new StringContent(dto.Capacidad.ToString()), "Capacidad");
+            form.Add(new StringContent(dto.NumeroHabitaciones.ToString()), "Numero_Habitaciones");
+            form.Add(new StringContent(dto.Descripcion ?? ""), "Descripcion");
+            form.Add(new StringContent(dto.ServiciosIncluidos ?? ""), "Servicios_Incluidos");
+            form.Add(new StringContent(dto.Disponibilidad ?? "Si"), "Disponibilidad");
+            form.Add(new StringContent(dto.PrecioPorNoche.ToString(CultureInfo.InvariantCulture)), "Precio_Por_Noche");
+            form.Add(new StringContent(dto.Latitud?.ToString(CultureInfo.InvariantCulture) ?? ""), "Latitud");
+            form.Add(new StringContent(dto.Longitud?.ToString(CultureInfo.InvariantCulture) ?? ""), "Longitud");
+
+            if (nuevaImagen != null && nuevaImagen.Length > 0)
+            {
+                using var ms = new MemoryStream();
+                await nuevaImagen.CopyToAsync(ms);
+                ms.Position = 0;
+                var fileContent = new ByteArrayContent(ms.ToArray());
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue(nuevaImagen.ContentType);
+                form.Add(fileContent, "imagen", nuevaImagen.FileName); 
+            }
+
+            var res = await Api().PutAsync($"api/inmuebles/{dto.IdInmueble}", form);
             if (!res.IsSuccessStatusCode)
             {
                 ViewBag.Mensaje = await res.Content.ReadAsStringAsync();
                 return View(dto);
             }
 
+            var updated = await res.Content.ReadFromJsonAsync<InmuebleDto>();
             TempData["Msg"] = "Inmueble actualizado.";
             return RedirectToAction(nameof(Index));
         }
@@ -132,5 +209,19 @@ namespace Frontend.WebApp.Controllers
             TempData["Msg"] = res.IsSuccessStatusCode ? "Inmueble eliminado." : "No se pudo eliminar.";
             return RedirectToAction(nameof(Index));
         }
+
+        public async Task<IActionResult> Details(int id)
+        {
+            var res = await Api().GetAsync($"api/inmuebles/{id}");
+            if (!res.IsSuccessStatusCode)
+            {
+                TempData["Msg"] = "No se pudo cargar el inmueble.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var inmueble = await res.Content.ReadFromJsonAsync<InmuebleDto>();
+            return View(inmueble);
+        }
+
     }
 }
