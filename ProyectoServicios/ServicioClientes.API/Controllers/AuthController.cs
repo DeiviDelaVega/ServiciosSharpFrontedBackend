@@ -98,18 +98,29 @@ namespace ServicioClientes.API.Controllers
             if (usuario == null || !BCrypt.Net.BCrypt.Verify(dto.Clave, usuario.Clave))
                 return Unauthorized("Credenciales invalidas");
 
-            var token = GenerateJwtToken(usuario);
+            int? adminId = null;
+            if (usuario.Rol == "admin")
+            {
+                adminId = _context.Administrador
+                    .Where(a => a.Correo == usuario.Correo)
+                    .Select(a => (int?)a.ID_Administrador)
+                    .FirstOrDefault();
+            }
+            var token = GenerateJwtToken(usuario, adminId);
 
             return Ok(new {token});
         }
 
-        private string GenerateJwtToken(Usuario usuario)
+        private string GenerateJwtToken(Usuario usuario, int? adminId)
         {
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, usuario.Correo!),
                 new Claim(ClaimTypes.Role, usuario.Rol!)
             };
+
+            if (adminId.HasValue)
+                claims.Add(new Claim(ClaimTypes.NameIdentifier, adminId.Value.ToString()));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

@@ -125,8 +125,8 @@ namespace ServicioClientes.API.Controllers
             if (!string.IsNullOrEmpty(filtro))
             {
                 query = query.Where(c =>
-                    c.Apellido.ToLower().Contains(filtro) ||
-                    c.NroDocumento.ToLower().Contains(filtro));
+                    c.Apellido!.ToLower().Contains(filtro) ||
+                    c.NroDocumento!.ToLower().Contains(filtro));
             }
 
             var totalItems = await query.CountAsync();

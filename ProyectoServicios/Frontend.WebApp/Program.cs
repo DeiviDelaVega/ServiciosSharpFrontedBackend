@@ -8,7 +8,15 @@ builder.Services.AddHttpClient("ServicioClientes", client =>
     client.BaseAddress = new Uri("https://localhost:7100/");
 });
 
-builder.Services.AddSession();
+builder.Services.AddHttpClient("ServicioInmuebles", c =>
+    c.BaseAddress = new Uri("https://localhost:7014/"));
+
+builder.Services.AddSession(o =>
+{
+    o.IdleTimeout = TimeSpan.FromHours(3);
+    o.Cookie.HttpOnly = true;
+    o.Cookie.IsEssential = true;
+});
 
 var app = builder.Build();
 
