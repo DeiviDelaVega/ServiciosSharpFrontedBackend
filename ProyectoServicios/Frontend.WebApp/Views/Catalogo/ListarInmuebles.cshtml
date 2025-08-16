@@ -1,0 +1,121 @@
+﻿@model Shared.Models.CatalogoResponse
+@using Microsoft.AspNetCore.Mvc.Rendering
+@{
+	ViewData["Title"] = "Inmuebles Disponibles";
+}
+
+@if (Model == null)
+{
+	<div class="alert alert-danger text-center mt-5">
+		<strong>Ocurrió un error:</strong> No se pudo cargar la información. Inténtalo nuevamente más tarde.
+	</div>
+	return;
+}
+
+<div class="container py-4 fade-in">
+	<h2 class="text-center fw-bold mb-4 display-6">🏠 Inmuebles Disponibles</h2>
+
+	<form asp-action="VerInmuebles" method="get" class="mb-4">
+		<div class="search-bar bg-white rounded-pill shadow-sm p-2 d-flex align-items-center animate__animated animate__fadeInDown">
+			<i class="fa-solid fa-search ms-3 text-muted"></i>
+			<input type="text" class="form-control border-0 shadow-none" name="filtro" value="@(ViewBag.Filtro ?? "")" placeholder="Busca tu próximo lugar..." />
+			<button type="submit" class="btn btn-dark rounded-pill px-4">Buscar</button>
+			<button type="button" class="btn btn-outline-secondary rounded-pill px-4 ms-2" onclick="toggleFiltros()">
+				<i class="fa fa-sliders-h me-2"></i> Filtros
+			</button>
+		</div>
+
+		<div id="filtros" class="bg-light rounded-4 p-4 mt-3 shadow-sm border-start border-4 border-dark d-none">
+			<div class="row g-3">
+				<div class="col-md-3">
+					<label class="form-label fw-bold">Precio desde:</label>
+					<input type="number" class="form-control" name="precioDesde" value="@(ViewBag.PrecioDesde ?? "")" placeholder="S/." />
+				</div>
+				<div class="col-md-3">
+					<label class="form-label fw-bold">Precio hasta:</label>
+					<input type="number" class="form-control" name="precioHasta" value="@(ViewBag.PrecioHasta ?? "")" placeholder="S/." />
+				</div>
+				<div class="col-md-3 mb-3">
+					<label>Estado:</label>
+					<select asp-for="Estado" asp-items="@((IEnumerable<SelectListItem>)ViewData["EstadoOptions"])"></select>
+
+				</div>
+			</div>
+			<div class="d-flex justify-content-end mt-3">
+				<button type="submit" class="btn btn-dark me-2">Buscar</button>
+				<a href="@Url.Action("VerInmuebles", "Catalogo")" class="btn btn-secondary">Limpiar</a>
+			</div>
+		</div>
+	</form>
+
+
+	@if (!string.IsNullOrEmpty(Model.Alerta))
+	{
+		<div class="alert alert-warning text-center rounded-pill shadow-sm border border-warning">
+			<p class="mb-1">@Model.Alerta</p>
+			<a asp-action="MotivoSancion" class="btn btn-link">Ver motivos de sanción</a>
+		</div>
+	}
+
+	@if (Model.Inmuebles != null && Model.Inmuebles.Any())
+	{
+		<div class="row g-4">
+			@foreach (var inmueble in Model.Inmuebles)
+			{
+				<div class="col-md-4">
+					<div class="card shadow-sm border-0 rounded-4 overflow-hidden h-100">
+						<div class="position-relative">
+							<img src="@inmueble.ImagenHabitacion" alt="Imagen" class="img-fluid w-100" style="height:220px;object-fit:cover;" />
+							<span class="badge position-absolute top-0 end-0 m-2 @(inmueble.Disponibilidad == "Si" ? "bg-success" : "bg-danger")">
+								@inmueble.Disponibilidad
+							</span>
+						</div>
+						<div class="p-3 d-flex flex-column">
+							<h5 class="mb-1 fw-bold">@inmueble.Nombre</h5>
+							<p class="text-muted small flex-grow-1">@inmueble.Descripcion</p>
+							<p class="small mb-1"><strong>Capacidad:</strong> @inmueble.Capacidad personas</p>
+							<p class="small mb-1"><strong>Habitaciones:</strong> @inmueble.NumeroHabitaciones</p>
+							<div class="d-flex justify-content-between align-items-center mt-2">
+								<h5 class="text-primary mb-0">S/ @inmueble.PrecioPorNoche.ToString("N2")</h5>
+								<a asp-action="Detalle" asp-route-id="@inmueble.IdInmueble" class="btn btn-dark rounded-pill px-4 @(inmueble.Disponibilidad != "Si" ? "disabled" : "")">
+									Ver
+								</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			}
+		</div>
+
+		@if (Model.TotalPaginas > 1)
+		{
+			<div class="d-flex justify-content-center mt-4">
+				<nav>
+					<ul class="pagination">
+						@for (int i = 0; i < Model.TotalPaginas; i++)
+						{
+							<li class="page-item @(i + 1 == Model.PaginaActual ? "active" : "")">
+								<a class="page-link" href="@Url.Action("VerInmuebles", new { pageNumber = i + 1 })">@(i + 1)</a>
+							</li>
+						}
+					</ul>
+				</nav>
+			</div>
+		}
+	}
+	else
+	{
+		<div class="text-center text-muted mt-5">
+			<p>No hay inmuebles disponibles para mostrar.</p>
+		</div>
+	}
+</div>
+
+@section Scripts {
+	<script>
+		function toggleFiltros() {
+			const filtros = document.getElementById('filtros');
+			filtros.classList.toggle('d-none');
+		}
+	</script>
+}

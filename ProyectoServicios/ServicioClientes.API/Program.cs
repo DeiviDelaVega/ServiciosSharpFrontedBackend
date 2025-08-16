@@ -4,7 +4,10 @@ using Microsoft.IdentityModel.Tokens;
 using ServicioClientes.API.Data;
 using System.Text;
 
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Configurar CORS (opcional, útil para probar con Angular/React)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
@@ -16,16 +19,16 @@ builder.Services.AddCors(options =>
         });
 });
 
+// Configurar conexión a SQL Server
 builder.Services.AddDbContext<ClientesDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add services to the container.
+var key = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrEmpty(key))
+    throw new Exception("Jwt:Key no está configurado en appsettings.json");
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
+// Configurar JWT 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -38,12 +41,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
-            )
+                Encoding.UTF8.GetBytes(key))
         };
     });
 
 builder.Services.AddAuthorization();
+
+// Agregar controladores
+builder.Services.AddControllers();
+
+// Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -54,10 +63,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

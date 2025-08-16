@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ServicioClientes.API.Data;
 using ServicioClientes.API.Models;
+using Shared.Models;
 
 namespace ServicioClientes.API.Controllers
 {
@@ -150,5 +152,36 @@ namespace ServicioClientes.API.Controllers
 
             return Ok(resultado);
         }
+
+        [HttpGet("me")]
+        [Authorize(Roles = "cliente")] // Solo clientes pueden consultar sus datos
+        public async Task<IActionResult> GetDatosClienteActual()
+        {
+            var correo = User.Identity?.Name; // del token
+            if (string.IsNullOrEmpty(correo))
+                return Unauthorized("No se pudo obtener el correo del token");
+
+            var cliente = await _context.Cliente
+                .Where(c => c.Correo == correo)
+                .Select(c => new ClienteDto
+                {
+                    IdCliente = c.ID_Cliente,
+                    Nombre = c.Nombre,
+                    Apellido = c.Apellido,
+                    NroDocumento = c.NroDocumento,
+                    Direccion = c.Direccion,
+                    NumeroTelf = c.NumeroTelf,
+                    FechaRegistro = c.FechaRegistro,
+                    Correo = c.Correo,
+                    Estado = c.Estado
+                })
+                .FirstOrDefaultAsync();
+
+            if (cliente == null)
+                return NotFound("Cliente no encontrado");
+
+            return Ok(cliente);
+        }
+
     }
 }
