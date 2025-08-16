@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="NewFolder\**" />
+    <Content Remove="NewFolder\**" />
+    <EmbeddedResource Remove="NewFolder\**" />
+    <None Remove="NewFolder\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="wwwroot\css\PaginaInicioAdminCliente.css" />
     <Content Remove="wwwroot\imagenes\baner1.jpg" />
     <Content Remove="wwwroot\imagenes\baner2.jpg" />
@@ -28,10 +35,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Shared.Models\Shared.Models.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="NewFolder\" />
   </ItemGroup>
 
   <ItemGroup>

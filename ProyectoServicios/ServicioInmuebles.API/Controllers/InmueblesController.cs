@@ -86,12 +86,14 @@ namespace ServicioInmuebles.API.Controllers
 
         [HttpPut("{id:int}")]
         [Authorize(Roles = "admin")]
+        [Consumes("multipart/form-data")]
+        [RequestSizeLimit(20_000_000)]
         public async Task<ActionResult<Inmueble>> Update(int id, [FromForm] CrearInmuebleDto dto, IFormFile? imagen)
         {
             var entity = await _ctx!.Inmueble.FindAsync(id);
             if (entity is null) return NotFound();
 
-            // Actualizar datos básicos
+            // Actualiza campos básicos
             entity.Nombre = dto.Nombre;
             entity.Capacidad = dto.Capacidad;
             entity.Numero_Habitaciones = dto.Numero_Habitaciones;
@@ -102,14 +104,12 @@ namespace ServicioInmuebles.API.Controllers
             entity.Latitud = dto.Latitud;
             entity.Longitud = dto.Longitud;
 
+            // Si llegó una nueva imagen, borra la anterior y sube la nueva
             if (imagen != null && imagen.Length > 0)
             {
-                var acc = new Account(_config["Cloudinary:CloudName"], 
-                    _config["Cloudinary:ApiKey"], 
-                    _config["Cloudinary:ApiSecret"]);
+                var acc = new Account(_config!["Cloudinary:CloudName"], _config["Cloudinary:ApiKey"], _config["Cloudinary:ApiSecret"]);
                 var cloud = new Cloudinary(acc);
 
-                // Eliminar imagen anterior si existe
                 if (!string.IsNullOrEmpty(entity.Imagen_Habitacion))
                 {
                     var publicId = ExtraerPublicIdDesdeUrl(entity.Imagen_Habitacion);
@@ -117,7 +117,6 @@ namespace ServicioInmuebles.API.Controllers
                         await cloud.DestroyAsync(new DeletionParams(publicId) { ResourceType = ResourceType.Image });
                 }
 
-                // Subir nueva imagen con nombre único
                 var uploadParams = new ImageUploadParams
                 {
                     File = new FileDescription(imagen.FileName, imagen.OpenReadStream()),
@@ -129,7 +128,6 @@ namespace ServicioInmuebles.API.Controllers
             }
 
             await _ctx.SaveChangesAsync();
-
             return Ok(entity);
         }
 

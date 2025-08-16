@@ -134,14 +134,14 @@ namespace Frontend.WebApp.Controllers
 
     public class FiltrarFechasRequest
     {
-        public string fechaInicio { get; set; }
-        public string fechaFin { get; set; }
+        public string? fechaInicio { get; set; }
+        public string? fechaFin { get; set; }
         public int page { get; set; }
     }
 
     public class FiltrarEstadoRequest
     {
-        public string estado { get; set; }
+        public string? estado { get; set; }
         public int page { get; set; }
     }
 }
