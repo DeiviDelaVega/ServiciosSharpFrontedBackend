@@ -24,81 +24,85 @@ namespace Frontend.WebApp.Controllers
 
             return cli;
         }
-
-        // LISTA
-        public async Task<IActionResult> Index(string filtro, string disponibilidad, string adminNombre, int pagina = 1, int pageSize = 5)
+        private HttpClient ApiClientes()
         {
-            // Traer todos los inmuebles desde la API
+            var cli = _factory.CreateClient("ServicioClientes");
+            var token = HttpContext.Session.GetString("token");
+            if (!string.IsNullOrEmpty(token))
+                cli.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
+            return cli;
+        }
+
+        // Frontend.WebApp.Controllers.InmuebleController
+
+        public async Task<IActionResult> Index(string filtro, string disponibilidad, int? adminId, int pagina = 1, int pageSize = 5)
+        {
+            // 1) Traer inmuebles
             var res = await Api().GetAsync("api/inmuebles");
             if (!res.IsSuccessStatusCode)
             {
                 TempData["Msg"] = "No se pudo listar inmuebles.";
                 return View(new List<InmuebleDto>());
             }
-
             var data = await res.Content.ReadFromJsonAsync<List<InmuebleDto>>() ?? new List<InmuebleDto>();
 
-            // -----------------------
-            // Aplicar filtros
-            // -----------------------
-
-            // Filtro por nombre o servicios
-            if (!string.IsNullOrEmpty(filtro))
+            // 2) Filtros
+            if (!string.IsNullOrWhiteSpace(filtro))
             {
-                data = data.Where(i => (i.Nombre?.Contains(filtro, StringComparison.OrdinalIgnoreCase) ?? false)
-                                     || (i.ServiciosIncluidos?.Contains(filtro, StringComparison.OrdinalIgnoreCase) ?? false))
-                           .ToList();
+                data = data.Where(i =>
+                    (i.Nombre?.Contains(filtro, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (i.Descripcion?.Contains(filtro, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    (i.ServiciosIncluidos?.Contains(filtro, StringComparison.OrdinalIgnoreCase) ?? false)
+                ).ToList();
             }
 
-            // Filtro por disponibilidad
-            if (!string.IsNullOrEmpty(disponibilidad))
+            if (!string.IsNullOrWhiteSpace(disponibilidad))
             {
-                data = data.Where(i => i.Disponibilidad?.Equals(disponibilidad, StringComparison.OrdinalIgnoreCase) ?? false)
-                           .ToList();
+                data = data.Where(i => string.Equals(i.Disponibilidad, disponibilidad, StringComparison.OrdinalIgnoreCase)).ToList();
             }
 
-            // Filtro por nombre del administrador
-            if (!string.IsNullOrEmpty(adminNombre))
+            if (adminId.HasValue)
             {
-                data = data.Where(i => i.Nombre?.Contains(adminNombre, StringComparison.OrdinalIgnoreCase) ?? false)
-                           .ToList();
+                // filtra por el creador
+                data = data.Where(i => i.ID_Admin_Creador == adminId.Value).ToList();
             }
 
-            // Ordenar por Id
+            // 3) Orden + paginación
             data = data.OrderBy(i => i.IdInmueble).ToList();
-
-            // -----------------------
-            // Paginación
-            // -----------------------
             var totalItems = data.Count;
-            var totalPaginas = (int)Math.Ceiling(totalItems / (double)pageSize);
+            var totalPaginas = Math.Max(1, (int)Math.Ceiling(totalItems / (double)pageSize));
             pagina = Math.Clamp(pagina, 1, totalPaginas);
-
             var paginaActual = data.Skip((pagina - 1) * pageSize).Take(pageSize).ToList();
 
-            // -----------------------
-            // Valores para la vista
-            // -----------------------
+            // 4) Poblar combo de administradores (desde ServicioClientes.API)
+            var resAdmins = await ApiClientes().GetAsync("api/administradores");
+            if (resAdmins.IsSuccessStatusCode)
+            {
+                var admins = await resAdmins.Content.ReadFromJsonAsync<List<AdministradorDto>>() ?? new();
+                var adminsSelect = admins.Select(a => new {
+                    a.IdAdministrador,
+                    NombreCompleto = $"{a.Nombre} {a.Apellido}".Trim()
+                }).ToList();
+
+                ViewBag.Administradores = new SelectList(adminsSelect, "IdAdministrador", "NombreCompleto", adminId);
+            }
+            else
+            {
+                ViewBag.Administradores = new SelectList(Enumerable.Empty<object>(), "IdAdministrador", "NombreCompleto");
+            }
+
+            // 5) Variables para la vista
             ViewBag.PaginaActual = pagina;
             ViewBag.TotalPaginas = totalPaginas;
             ViewBag.Filtro = filtro;
             ViewBag.Disponibilidad = disponibilidad;
-            ViewBag.AdminNombre = adminNombre;
-
-            // Lista de administradores para el dropdown
-            var resAdmins = await Api().GetAsync("api/cliente"); // suponiendo que aquí traes admins
-            if (resAdmins.IsSuccessStatusCode)
-            {
-                var admins = await resAdmins.Content.ReadFromJsonAsync<List<AdministradorDto>>();
-                ViewBag.Administradores = new SelectList(admins, "Nombre", "Nombre", adminNombre);
-            }
-            else
-            {
-                ViewBag.Administradores = new SelectList(new List<AdministradorDto>(), "Nombre", "Nombre");
-            }
+            ViewBag.AdminId = adminId;
 
             return View(paginaActual);
         }
+
+
 
         // CREAR (GET)
         public IActionResult Create() => View(new CrearInmuebleViewModel());
@@ -161,10 +165,9 @@ namespace Frontend.WebApp.Controllers
             return View(model);
         }
 
-        // EDITAR (POST)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(InmuebleDto dto, IFormFile nuevaImagen)
+        public async Task<IActionResult> Edit(InmuebleDto dto, IFormFile imagen)
         {
             using var form = new MultipartFormDataContent();
 
@@ -175,17 +178,21 @@ namespace Frontend.WebApp.Controllers
             form.Add(new StringContent(dto.ServiciosIncluidos ?? ""), "Servicios_Incluidos");
             form.Add(new StringContent(dto.Disponibilidad ?? "Si"), "Disponibilidad");
             form.Add(new StringContent(dto.PrecioPorNoche.ToString(CultureInfo.InvariantCulture)), "Precio_Por_Noche");
-            form.Add(new StringContent(dto.Latitud?.ToString(CultureInfo.InvariantCulture) ?? ""), "Latitud");
-            form.Add(new StringContent(dto.Longitud?.ToString(CultureInfo.InvariantCulture) ?? ""), "Longitud");
 
-            if (nuevaImagen != null && nuevaImagen.Length > 0)
+            // 👇 toma los valores crudos del form (no los del dto) y normaliza
+            var latStr = (Request.Form["Latitud"].ToString() ?? "").Replace(',', '.');
+            var lngStr = (Request.Form["Longitud"].ToString() ?? "").Replace(',', '.');
+            form.Add(new StringContent(latStr), "Latitud");
+            form.Add(new StringContent(lngStr), "Longitud");
+
+            if (imagen != null && imagen.Length > 0)
             {
                 using var ms = new MemoryStream();
-                await nuevaImagen.CopyToAsync(ms);
+                await imagen.CopyToAsync(ms);
                 ms.Position = 0;
                 var fileContent = new ByteArrayContent(ms.ToArray());
-                fileContent.Headers.ContentType = new MediaTypeHeaderValue(nuevaImagen.ContentType);
-                form.Add(fileContent, "imagen", nuevaImagen.FileName); 
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue(imagen.ContentType);
+                form.Add(fileContent, "imagen", imagen.FileName);
             }
 
             var res = await Api().PutAsync($"api/inmuebles/{dto.IdInmueble}", form);
@@ -195,10 +202,10 @@ namespace Frontend.WebApp.Controllers
                 return View(dto);
             }
 
-            var updated = await res.Content.ReadFromJsonAsync<InmuebleDto>();
             TempData["Msg"] = "Inmueble actualizado.";
             return RedirectToAction(nameof(Index));
         }
+
 
         // ELIMINAR
         [HttpPost]

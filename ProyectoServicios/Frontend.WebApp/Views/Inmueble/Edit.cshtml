@@ -176,11 +176,15 @@
 @if (Model.Latitud != null && Model.Longitud != null)
 {
     <script>
-        const lat = @Model.Latitud;
-        const lng = @Model.Longitud;
+        // Fuerza punto decimal desde Razor
+        const lat = parseFloat('@(Model.Latitud?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")');
+        const lng = parseFloat('@(Model.Longitud?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "")');
         const nombre = "@Model.Nombre";
 
-        function initMap() {
+        // Google llama a window.initMap
+        window.initMap = function () {
+            if (isNaN(lat) || isNaN(lng)) return; // por si vienen nulos
+
             const ubicacion = { lat: lat, lng: lng };
             const map = new google.maps.Map(document.getElementById("map"), {
                 zoom: 15,
@@ -194,11 +198,20 @@
                 title: nombre
             });
 
-            marker.addListener("dragend", function (event) {
-                document.getElementById("latitud").value = event.latLng.lat();
-                document.getElementById("longitud").value = event.latLng.lng();
-            });
+            // Actualiza los hidden al arrastrar
+            const latI = document.getElementById("latitud");
+            const lngI = document.getElementById("longitud");
+            if (latI && lngI) {
+                marker.addListener("dragend", (e) => {
+                    latI.value = e.latLng.lat().toFixed(6);
+                    lngI.value = e.latLng.lng().toFixed(6);
+                });
+            }
         }
     </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCc1pV5K0s9Z7xGUUU03n6zBhKemKLiRx8&callback=initMap" async defer></script>
+
+    <!-- Carga recomendada por Google -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCc1pV5K0s9Z7xGUUU03n6zBhKemKLiRx8&callback=initMap&v=weekly&loading=async"
+            defer>
+    </script>
 }

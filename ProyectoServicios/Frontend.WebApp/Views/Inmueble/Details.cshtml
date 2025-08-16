@@ -71,45 +71,45 @@
             }
         </div>
 
-        @if (Model.Latitud.HasValue && Model.Longitud.HasValue)
-        {
+@if (Model.Latitud.HasValue && Model.Longitud.HasValue)
+{
             <div class="col-md-12 text-center">
                 <label class="control-label">Ubicación en el Mapa</label>
                 <div class="map-wrapper">
                     <div id="map" style="height: 400px;"></div>
                 </div>
-                <script>
-                    const lat = @Model.Latitud;
-                    const lng = @Model.Longitud;
-                    const nombre = '@Model.Nombre';
 
-                    function initMap() {
+                <script>
+                    // Fuerza punto decimal desde Razor -> JS
+                    const lat = parseFloat('@Model.Latitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)');
+                    const lng = parseFloat('@Model.Longitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)');
+                    const nombre = "@Model.Nombre";
+
+                    // Google llama a window.initMap
+                    window.initMap = function () {
+                        if (isNaN(lat) || isNaN(lng)) return;
+
                         const ubicacion = { lat: lat, lng: lng };
                         const map = new google.maps.Map(document.getElementById("map"), {
                             zoom: 15,
-                            center: ubicacion
+                            center: ubicacion,
                         });
+
                         new google.maps.Marker({
                             position: ubicacion,
                             map: map,
                             title: nombre
                         });
-                    }
+                    };
                 </script>
-                <script async defer
-                        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCc1pV5K0s9Z7xGUUU03n6zBhKemKLiRx8&callback=initMap">
+
+                <!-- Carga recomendada por Google -->
+                <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCc1pV5K0s9Z7xGUUU03n6zBhKemKLiRx8&callback=initMap&v=weekly&loading=async"
+                        defer>
                 </script>
             </div>
-        }
-        else
-        {
+}
+else
+{
             <p><em>Este inmueble no tiene ubicación registrada</em></p>
-        }
-
-        <br />
-        <div class="button-group-container mt-4 text-center">
-            <a class="btn btn-secondary" asp-action="Index">Volver</a>
-        </div>
-    </div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+}
