@@ -1,18 +1,35 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+﻿using Microsoft.AspNetCore.Localization;
+using Stripe;
+using System.Globalization;
+
+var builder = WebApplication.CreateBuilder(args);
+
+var us = new CultureInfo("en-US");
+var loc = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(us),
+    SupportedCultures = new List<CultureInfo> { us },
+    SupportedUICultures = new List<CultureInfo> { us },
+};
+
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSession();
 
 builder.Services.AddHttpContextAccessor();
 
-builder.Services.AddHttpClient("ServicioClientes", client =>
-{
-    client.BaseAddress = new Uri("https://localhost:7100/");
-});
-builder.Services.AddSession();
-
+builder.Services.AddHttpClient("ServicioClientes", c =>
+    c.BaseAddress = new Uri(builder.Configuration["ApiUrls:ServicioClientes"]!));
 builder.Services.AddHttpClient("ServicioInmuebles", c =>
-    c.BaseAddress = new Uri("https://localhost:7014/"));
+    c.BaseAddress = new Uri(builder.Configuration["ApiUrls:ServicioInmuebles"]!));
+builder.Services.AddHttpClient("ServicioReservas", c =>
+    c.BaseAddress = new Uri(builder.Configuration["ApiUrls:ServicioReservas"]!));
+
+
+builder.Services.AddHttpClient("ServicioReservas", c =>
+    c.BaseAddress = new Uri(builder.Configuration["ApiUrls:ServicioReservas"]!));
 
 builder.Services.AddSession(o =>
 {
@@ -36,21 +53,20 @@ else
     app.UseHsts();
 }
 
+app.UseRequestLocalization(loc);
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
+app.UseSession();
 app.UseRouting();
 
 app.UseAuthorization();
 
 app.UseEndpoints(endpoints =>
 {
-    //Aquí dentro va la ruta por defecto
     endpoints.MapControllerRoute(
         name: "default",
         pattern: "{controller=Auth}/{action=Login}/{id?}");
 
-    // (Opcional) Imprimir rutas disponibles para debug
     var routeEndpoints = endpoints.DataSources
         .SelectMany(ds => ds.Endpoints)
         .OfType<RouteEndpoint>();

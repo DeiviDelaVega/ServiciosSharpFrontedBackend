@@ -14,7 +14,7 @@ namespace Shared.Models
         public string? NroDocumento { get; set; }
         public string? Direccion { get; set; }
         public string? NumeroTelf { get; set; }
-        public DateTime FechaRegistro { get; set; }
+        public DateTime? FechaRegistro { get; set; }
         public string? Correo { get; set; }
         public string? Clave { get; set; }
         public string? Estado { get; set; }

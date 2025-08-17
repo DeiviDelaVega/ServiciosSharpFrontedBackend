@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ServicioReservas.API.Data;
+using ServicioReservas.API.Models;
 using Shared.Models;
 
 namespace ServicioReservas.API.Controllers
@@ -171,5 +172,78 @@ namespace ServicioReservas.API.Controllers
                 return NotFound();
             return Ok(reserva);
         }
+
+        private async Task<bool> HayTraslapeAsync(int idInmueble, DateTime ini, DateTime fin)
+        {
+            return await _context.Reserva.AnyAsync(r =>
+                r.ID_Inmueble == idInmueble &&
+                (r.Estado_Reserva == "Solicitado" || r.Estado_Reserva == "Aprobado") &&
+                ini < r.Fecha_Fin_Reserva && fin > r.Fecha_Inicio_Reserva);
+        }
+
+        [HttpGet("ocupadas/{inmuebleId:int}")]
+        public async Task<ActionResult<List<string>>> GetFechasOcupadas(int inmuebleId)
+        {
+            var reservas = await _context.Reserva
+                .Where(r => r.ID_Inmueble == inmuebleId &&
+                       (r.Estado_Reserva == "Solicitado" || r.Estado_Reserva == "Aprobado"))
+                .Select(r => new { r.Fecha_Inicio_Reserva, r.Fecha_Fin_Reserva })
+                .ToListAsync();
+
+            var ocupadas = new List<string>();
+            foreach (var r in reservas)
+            {
+                for (var d = r.Fecha_Inicio_Reserva.Date; d < r.Fecha_Fin_Reserva.Date; d = d.AddDays(1))
+                    ocupadas.Add(d.ToString("yyyy-MM-dd"));
+            }
+            return ocupadas.Distinct().ToList();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> Confirmar([FromBody] ConfirmarReservaDto dto)
+        {
+            if (dto.FechaFin <= dto.FechaInicio)
+                return BadRequest("Rango de fechas inválido.");
+
+            if (await HayTraslapeAsync(dto.IdInmueble, dto.FechaInicio, dto.FechaFin))
+                return Conflict("El inmueble ya está reservado en ese rango.");
+
+            using var tx = await _context.Database.BeginTransactionAsync();
+
+            var reserva = new Reserva
+            {
+                // 🔴 agrega esta línea:
+                Fecha_Solicitud = DateTime.Now, // o DateTime.UtcNow
+
+                ID_Cliente = dto.IdCliente,
+                ID_Inmueble = dto.IdInmueble,
+                Fecha_Inicio_Reserva = dto.FechaInicio,
+                Fecha_Fin_Reserva = dto.FechaFin,
+                Monto_Total = dto.MontoTotal,
+                Metodo_Pago = "Tarjeta",       // opcional, pero explícito
+                Estado_Reserva = "Aprobado"
+            };
+
+            _context.Reserva.Add(reserva);
+            await _context.SaveChangesAsync();
+
+            var pago = new Pago
+            {
+                ID_Solicitud = reserva.ID_Solicitud,
+                Monto = dto.MontoTotal,
+                Stripe_Payment_Id = dto.StripePaymentId
+            };
+
+            _context.Pago.Add(pago);
+            await _context.SaveChangesAsync();
+
+            await tx.CommitAsync();
+            return Ok(new { reserva.ID_Solicitud });
+        }
+
+
+
+
+
     }
 }
