@@ -13,7 +13,7 @@ namespace ServicioClientes.API.Models
         [Column("Numero_Telf")]
         public string? NumeroTelf { get; set; }
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
-        public DateTime FechaRegistro { get; set; }
+        public DateTime? FechaRegistro { get; set; }
         public string Estado { get; set; } = "activo";
         public string? Correo { get; set; }
         public Usuario? Usuario { get; set; }

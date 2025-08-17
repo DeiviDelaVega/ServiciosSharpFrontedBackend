@@ -20,7 +20,7 @@ namespace Frontend.WebApp.Controllers
         {
             _httpClientFactory = httpClientFactory;
             _logger = logger;
-            _apiBaseUrl = configuration["ApiUrls:ServicioInmuebles"];
+            _apiBaseUrl = configuration["ApiUrls:ServicioInmuebles"]!;
         }
 
         // Crea un HttpClient configurado con el token de sesión
@@ -31,7 +31,7 @@ namespace Frontend.WebApp.Controllers
             if (string.IsNullOrWhiteSpace(token))
             {
                 _logger.LogWarning("No hay token en sesión.");
-                return null;
+                return null!;
             }
 
             try
@@ -42,7 +42,7 @@ namespace Frontend.WebApp.Controllers
                 if (jwt.ValidTo < DateTime.UtcNow)
                 {
                     _logger.LogWarning("Token expirado. Expiró en: {Expiracion}", jwt.ValidTo);
-                    return null;
+                    return null!;
                 }
 
                 var rol = jwt.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
@@ -55,14 +55,33 @@ namespace Frontend.WebApp.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al analizar el token JWT.");
-                return null;
+                return null!;
             }
         }
+
+        private HttpClient ClienteInmuebles()
+        {
+            var token = HttpContext.Session.GetString("token");
+            var cli = _httpClientFactory.CreateClient("ServicioInmuebles");
+            if (!string.IsNullOrEmpty(token))
+                cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            return cli;
+        }
+
+        private HttpClient ClienteReservas()
+        {
+            var token = HttpContext.Session.GetString("token");
+            var cli = _httpClientFactory.CreateClient("ServicioReservas");
+            if (!string.IsNullOrEmpty(token))
+                cli.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            return cli;
+        }
+
 
         // Página principal del cliente
         public async Task<IActionResult> Index()
         {
-            var client = CrearClienteConToken();
+            var client = ClienteInmuebles();
             if (client == null)
                 return RedirectToAction("Login", "Auth");
 
@@ -113,7 +132,7 @@ namespace Frontend.WebApp.Controllers
 
                 _logger.LogInformation("Llamando a la URL: {Url}", url);
 
-                var httpResponse = await client.GetAsync(url);
+                var httpResponse = await ClienteInmuebles().GetAsync(url);
 
                 if (!httpResponse.IsSuccessStatusCode)
                 {
@@ -161,7 +180,7 @@ namespace Frontend.WebApp.Controllers
                 if (client == null)
                     return RedirectToAction("Login", "Auth");
 
-                var inmueble = await client.GetFromJsonAsync<InmuebleDto>($"{_apiBaseUrl}api/cliente/catalogo/detalle/{id}");
+                var inmueble = await ClienteInmuebles().GetFromJsonAsync<InmuebleDto>($"{_apiBaseUrl}api/cliente/catalogo/detalle/{id}");
                 if (inmueble == null) return NotFound();
                 return View(inmueble);
             }
@@ -173,23 +192,23 @@ namespace Frontend.WebApp.Controllers
         }
 
         // Fechas ocupadas de un inmueble
+        [HttpGet]
         public async Task<IActionResult> FechasOcupadas(int id)
         {
             try
             {
-                var client = CrearClienteConToken();
-                if (client == null)
-                    return Unauthorized();
+                var fechas = await _httpClientFactory.CreateClient("ServicioReservas")
+                    .GetFromJsonAsync<List<string>>($"api/reserva/ocupadas/{id}");
 
-                var fechas = await client.GetFromJsonAsync<List<CatalogoResponse>>($"{_apiBaseUrl}api/cliente/catalogo/ocupadas/{id}");
-                return Json(fechas);
+                return Json(fechas ?? new List<string>());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error al obtener fechas ocupadas.");
-                return StatusCode(500, "Error al cargar las fechas ocupadas");
+                return Json(new List<string>());
             }
         }
+
 
         // Mostrar términos y condiciones
         public async Task<IActionResult> Terminos()
