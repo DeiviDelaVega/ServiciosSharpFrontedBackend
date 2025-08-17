@@ -1,49 +1,39 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using System.Globalization;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Localization;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
-using ServicioInmuebles.API.Data; 
-using System.Globalization;
-using System.Text;
-using System.Threading.Tasks;
+using ServicioInmuebles.API.Data;
+using ServicioInmuebles.API.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var defaultCulture = new CultureInfo("en-US");
-var localizationOptions = new RequestLocalizationOptions
+// ===== Configurar CORS =====
+builder.Services.AddCors(options =>
 {
-    DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture(defaultCulture),
-    SupportedCultures = new List<CultureInfo> { defaultCulture },
-    SupportedUICultures = new List<CultureInfo> { defaultCulture }
-};
-
-localizationOptions.RequestCultureProviders.Clear();
-localizationOptions.RequestCultureProviders.Add(
-    new CustomRequestCultureProvider(_ =>
-        Task.FromResult<ProviderCultureResult?>(new ProviderCultureResult("en-US", "en-US"))
-    )
-);
-
-builder.Services.AddCors(o => o.AddPolicy("AllowAll", p =>
-    p.AllowAnyOrigin()
-     .AllowAnyHeader()
-     .AllowAnyMethod()
-));
-
-builder.Services.AddDbContext<InmueblesDbContext>(opt =>
-    opt.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-);
-
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(o =>
+    options.AddPolicy("PermitirFrontend", policy =>
     {
-        o.TokenValidationParameters = new TokenValidationParameters
+        policy.WithOrigins("https://localhost:7268")
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
+// ===== Configurar conexión a SQL Server =====
+builder.Services.AddDbContext<InmueblesDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Validamos la clave JWT
+var key = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrEmpty(key))
+    throw new Exception("Jwt:Key no está configurado en appsettings.json");
+
+// ===== Configurar JWT =====
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
             ValidateAudience = true,
@@ -51,13 +41,36 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
-            )
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
         };
     });
 
 builder.Services.AddAuthorization();
+
+// Controladores y Swagger
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+// Localization
+var defaultCulture = new CultureInfo("en-US");
+var localizationOptions = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture(defaultCulture),
+    SupportedCultures = new List<CultureInfo> { defaultCulture },
+    SupportedUICultures = new List<CultureInfo> { defaultCulture }
+};
+localizationOptions.RequestCultureProviders.Clear();
+localizationOptions.RequestCultureProviders.Add(
+    new CustomRequestCultureProvider(_ =>
+        Task.FromResult<ProviderCultureResult?>(new ProviderCultureResult("en-US", "en-US")))
+);
+
+// HttpClient para ClienteService
+builder.Services.AddHttpClient<ClienteService>(c =>
+{
+    c.BaseAddress = new Uri("https://localhost:7100/");
+});
 
 var app = builder.Build();
 
@@ -70,9 +83,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
+
+app.UseCors("PermitirFrontend");
+
 app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();
+
 app.Run();

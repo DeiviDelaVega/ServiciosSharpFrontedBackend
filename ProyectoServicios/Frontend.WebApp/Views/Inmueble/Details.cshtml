@@ -3,9 +3,8 @@
 @{
     Layout = null;
     ViewData["Title"] = "Detalle de Inmueble";
-    @Html.Partial("_NavAdmin")
 }
-
+@Html.Partial("_NavAdmin")
 <link rel="stylesheet" href="@Url.Content("~/css/MantInmueble.css")" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -71,7 +70,7 @@
             }
         </div>
 
-@if (Model.Latitud.HasValue && Model.Longitud.HasValue)
+@if (Model.Latitud != 0 && Model.Longitud != 0)
 {
             <div class="col-md-12 text-center">
                 <label class="control-label">Ubicación en el Mapa</label>
@@ -81,8 +80,8 @@
 
                 <script>
                     // Fuerza punto decimal desde Razor -> JS
-                    const lat = parseFloat('@Model.Latitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)');
-                    const lng = parseFloat('@Model.Longitud.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)');
+                                       const lat = parseFloat('@(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}", Model.Latitud))');
+                    const lng = parseFloat('@(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}", Model.Longitud))');
                     const nombre = "@Model.Nombre";
 
                     // Google llama a window.initMap
