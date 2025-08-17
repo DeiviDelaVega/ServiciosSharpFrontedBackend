@@ -42,11 +42,12 @@
                         </li>
 
                         <li class="nav-item mx-2">
-                            <a asp-controller="Inmueble" asp-action="Catalogo"
-                               class="nav-link px-3 rounded @(currentController == "Inmueble" && currentAction == "Catalogo" ? "active" : "")">
-                                Ver Inmuebles
+                            <a href="@Url.Action("ListarInmuebles", "Catalogo")"
+                               class="nav-link px-3 rounded @(currentController == "Catalogo" && currentAction == "ListarInmuebles" ? "active" : "")">
+                                Catálogo de Inmuebles
                             </a>
                         </li>
+
 
                         <li class="nav-item">
                             <a asp-controller="Auth" asp-action="Logout"

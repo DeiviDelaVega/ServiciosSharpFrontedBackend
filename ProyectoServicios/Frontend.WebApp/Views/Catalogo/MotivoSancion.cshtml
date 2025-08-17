@@ -1,0 +1,45 @@
+﻿@model string
+
+<div class="container my-5 py-5 shadow-lg">
+    <div class="border-0 rounded-4">
+        <div class="card-body p-5">
+            <h1 class="text-danger fw-bold mb-4 text-center">
+                ⚠️ Motivos de Sanción
+            </h1>
+
+            <p class="lead text-muted text-center mb-5">
+                @Model
+            </p>
+
+            <div class="mb-4">
+                <h4 class="fw-bold text-primary">1. Falsedad en la información</h4>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">📌 Proporcionar datos falsos durante el registro o reservas.</li>
+                    <li class="list-group-item">📌 Usar identidades o correos electrónicos no verificables.</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <h4 class="fw-bold text-primary">2. Conducta inapropiada</h4>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">📌 Trato irrespetuoso o intimidatorio hacia el personal o anfitriones.</li>
+                    <li class="list-group-item">📌 Comportamiento inapropiado durante la estancia.</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <h4 class="fw-bold text-primary">3. Incumplimiento de políticas internas</h4>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">📌 No respetar normas del inmueble o del reglamento interno.</li>
+                    <li class="list-group-item">📌 Incitar a otros usuarios a infringir normas.</li>
+                </ul>
+            </div>
+
+            <div class="mt-5 text-center">
+                <a href="@Url.Action("ListarInmuebles", "Catalogo")" class="btn btn-primary btn-lg px-4">
+                    ⬅️ Volver al inicio
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -18,8 +18,6 @@ namespace Shared.Models
         [JsonPropertyName("nombre")]
         public string Nombre { get; set; }
 
-
-
         [Column("Capacidad")]
         [JsonPropertyName("capacidad")]
         public int Capacidad { get; set; }
@@ -44,18 +42,20 @@ namespace Shared.Models
         [JsonPropertyName("precio_Por_Noche")]
         public decimal PrecioPorNoche { get; set; }
 
+
         [Column("Imagen_Habitacion")]
         [JsonPropertyName("imagen_Habitacion")]
         public string ImagenHabitacion { get; set; }
 
         [Column("Latitud")]
         [JsonPropertyName("latitud")]
-        public decimal Latitud { get; set; }
+        public decimal? Latitud { get; set; }
 
         [Column("Longitud")]
         [JsonPropertyName("longitud")]
-        public decimal Longitud { get; set; }
+        public decimal? Longitud { get; set; }
 
+       
         [JsonPropertyName("iD_Admin_Creador")]
         public int? ID_Admin_Creador { get; set; }
     }

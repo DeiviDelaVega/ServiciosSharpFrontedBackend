@@ -59,29 +59,26 @@ namespace Frontend.WebApp.Controllers
             }
         }
 
-
-
-        // Mostrar página principal del cliente (nombre, estado, etc.)
+        // Página principal del cliente
         public async Task<IActionResult> Index()
         {
-                var client = CrearClienteConToken();
-                if (client == null)
-                    return RedirectToAction("Login", "Auth");
+            var client = CrearClienteConToken();
+            if (client == null)
+                return RedirectToAction("Login", "Auth");
 
-                string url = $"{_apiBaseUrl}api/cliente/catalogo/VerInmueble";
+            string url = $"{_apiBaseUrl}api/cliente/catalogo/VerInmueble";
 
-                _logger.LogInformation("Llamando a la URL: {Url}", url);
+            _logger.LogInformation("Llamando a la URL: {Url}", url);
 
-                var response = await client.GetFromJsonAsync<CatalogoResponse>(url);
+            var response = await client.GetFromJsonAsync<CatalogoResponse>(url);
 
-                if (response == null)
-                    _logger.LogWarning("La respuesta es null");
+            if (response == null)
+                _logger.LogWarning("La respuesta es null");
 
-                return View(response);
-            }
+            return View(response);
+        }
 
-
-        // Ver listado de inmuebles con filtros
+        // Listar inmuebles 
         public async Task<IActionResult> ListarInmuebles(string filtro = "", decimal? precioDesde = null, decimal? precioHasta = null, string estado = "", int pageNumber = 1)
         {
             try
@@ -97,8 +94,13 @@ namespace Frontend.WebApp.Controllers
                 if (client == null)
                     return RedirectToAction("Login", "Auth");
 
-                // Ruta relativa sin prefijo redundante (ya definido en BaseAddress)
-                string url = $"{_apiBaseUrl}api/cliente/catalogo/ListarInmuebles?pageNumber=1&pageSize=5";
+                // Crear variable local para URL base con /
+                string baseUrl = _apiBaseUrl.EndsWith("/") ? _apiBaseUrl : _apiBaseUrl + "/";
+
+                string url = $"{baseUrl}api/cliente/catalogo/ListarInmuebles?pageNumber={pageNumber}&pageSize=6";
+
+                if (!string.IsNullOrWhiteSpace(filtro))
+                    url += $"&filtro={Uri.EscapeDataString(filtro)}";
 
                 if (precioDesde.HasValue)
                     url += $"&precioDesde={precioDesde.Value}";
@@ -106,14 +108,36 @@ namespace Frontend.WebApp.Controllers
                 if (precioHasta.HasValue)
                     url += $"&precioHasta={precioHasta.Value}";
 
+                if (!string.IsNullOrWhiteSpace(estado))
+                    url += $"&estado={Uri.EscapeDataString(estado)}";
+
                 _logger.LogInformation("Llamando a la URL: {Url}", url);
 
-                var response = await client.GetFromJsonAsync<CatalogoResponse>(url);
+                var httpResponse = await client.GetAsync(url);
+
+                if (!httpResponse.IsSuccessStatusCode)
+                {
+                    var errorContent = await httpResponse.Content.ReadAsStringAsync();
+                    _logger.LogError("Error API {StatusCode}: {Content}", httpResponse.StatusCode, errorContent);
+                    ViewBag.ErrorMensaje = $"Error API: {httpResponse.StatusCode} - {errorContent}";
+                    return View("Error");
+                }
+
+                var response = await httpResponse.Content.ReadFromJsonAsync<CatalogoResponse>();
+
+                if (response.ModalSancion)
+                {
+                    ViewBag.MensajeSancion = response.Alerta ?? "Su cuenta está sancionada.";
+                    ViewBag.LinkMotivoSancion = Url.Action("MotivoSancion", "Catalogo");
+                }
+                return View(response);
+
 
                 ViewBag.Filtro = filtro;
                 ViewBag.PrecioDesde = precioDesde;
                 ViewBag.PrecioHasta = precioHasta;
                 ViewBag.Estado = estado;
+                ViewBag.PageNumber = pageNumber;
 
                 return View(response);
             }
@@ -127,7 +151,8 @@ namespace Frontend.WebApp.Controllers
             }
         }
 
-        // Ver detalle de un inmueble específico
+
+        // Detalle de inmueble
         public async Task<IActionResult> Detalle(int id)
         {
             try
@@ -147,7 +172,7 @@ namespace Frontend.WebApp.Controllers
             }
         }
 
-        // Obtener fechas ocupadas de un inmueble
+        // Fechas ocupadas de un inmueble
         public async Task<IActionResult> FechasOcupadas(int id)
         {
             try
@@ -194,8 +219,10 @@ namespace Frontend.WebApp.Controllers
                 if (client == null)
                     return Unauthorized();
 
-                var motivo = await client.GetStringAsync($"{_apiBaseUrl}api/cliente/catalogo/motivoSancion");
-                return View("MotivoSancion", motivo);
+                var motivo = await client.GetStringAsync($"{_apiBaseUrl}api/cliente/catalogo/MotivoSancion");
+                ViewBag.MotivoSancion = motivo;
+
+                return View();
             }
             catch (Exception ex)
             {

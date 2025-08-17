@@ -81,10 +81,21 @@ namespace ServicioInmuebles.API.Controllers
     [FromQuery] decimal? precioHasta = null,
     [FromQuery] string estado = "")
         {
-            // Cliente dummy para probar
-            var cliente = new ClienteDto { Nombre = "Test", Apellido = "Usuario", Estado = "activo" };
+            var cliente = await ObtenerClienteActualAsync();
+            if (cliente == null)
+                return StatusCode(StatusCodes.Status503ServiceUnavailable, "No se pudo obtener información del cliente.");
 
-            var response = new CatalogoResponse { NombreCliente = $"{cliente.Nombre} {cliente.Apellido}" };
+            var response = new CatalogoResponse
+            {
+                NombreCliente = $"{cliente.Nombre} {cliente.Apellido}"
+            };
+
+            if (cliente.Estado?.Equals("sancionado", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                response.ModalSancion = true;
+                response.Alerta = "Su cuenta ha sido sancionada por infringir las normas del sistema.";
+                return Ok(response); // devolvemos la alerta sin inmuebles
+            }
 
             var query = _context.Inmueble.AsQueryable();
 
@@ -136,6 +147,8 @@ namespace ServicioInmuebles.API.Controllers
 
             return Ok(response);
         }
+
+
 
 
         [HttpGet("detalle/{id}")]

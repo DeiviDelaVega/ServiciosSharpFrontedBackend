@@ -9,10 +9,9 @@
         public string? Descripcion { get; set; }
         public string? Servicios_Incluidos { get; set; }
         public string? Disponibilidad { get; set; }   // "Si" | "No"
-        public decimal Precio_Por_Noche { get; set; }
+        public DateTime FechaRegistro { get; set; } = DateTime.Now;
         public string? Imagen_Habitacion { get; set; }  // URL Cloudinary
         public decimal? Latitud { get; set; }
         public decimal? Longitud { get; set; }
-        public int? ID_Admin_Creador { get; set; }  // viene del JWT
     }
 }
