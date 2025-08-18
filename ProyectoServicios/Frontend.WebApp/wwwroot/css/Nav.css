@@ -1,0 +1,71 @@
+﻿.navbar {
+    padding: 0.6rem 1rem !important;
+}
+
+.custom-navbar {
+    background: linear-gradient(90deg, #1e1e1e, #343a40);
+    padding: 0.6rem 1rem;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    border-bottom: 1px solid #333;
+}
+
+.navbar-brand img {
+    border-radius: 8px;
+    margin-right: 10px;
+    transition: transform 0.3s ease;
+}
+
+.navbar-brand:hover img {
+    transform: rotate(-5deg) scale(1.05);
+}
+
+.navbar-brand span {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+
+.navbar-brand small {
+    display: block;
+    font-size: 0.8rem;
+    color: #5a574f;
+}
+
+.navbar-brand:hover span {
+    color: #837f75;
+}
+
+.custom-nav-link {
+    padding: 10px 15px;
+    transition: background-color 0.25s ease, color 0.25s ease;
+    font-weight: 500;
+    color: #ddd !important;
+    border-radius: 8px !important;
+}
+
+.custom-nav-link:hover {
+    background-color: #444;
+    color: #fff !important;
+}
+
+.custom-nav-link.active {
+    background-color: #555 !important;
+    color: #fff !important;
+    font-weight: 700;
+    box-shadow: 0 0 6px #777;
+}
+
+.dropdown-menu-dark {
+    background-color: #222;
+}
+
+.dropdown-item {
+    color: #ccc;
+}
+
+.dropdown-item:hover {
+    background-color: #555;
+    color: #fff;
+}

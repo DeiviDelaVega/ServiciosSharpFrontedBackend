@@ -12,51 +12,54 @@
     <title>@ViewData["Title"] - Web de Reservas</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Frontend.WebApp.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="@Url.Content("~/css/Nav.css")" />
 </head>
 
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark navbar-custom">
-            <div class="container d-flex align-items-center">
-                <a class="navbar-brand" href="#" style="font-size: 24px"><strong>Monterrico Polo Aparts</strong></a>
-
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavCliente"
-                        aria-controls="navbarNavCliente" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-
-                <div class="collapse navbar-collapse" id="navbarNavCliente">
-                    <ul class="navbar-nav ms-auto d-flex align-items-center">
-                        <li class="nav-item mx-2">
-                            <a asp-controller="Cliente" asp-action="Index"
-                               class="nav-link px-3 rounded @(currentAction == "Index" && currentController == "Cliente" ? "active" : "")">
-                                Inicio
-                            </a>
-                        </li>
-
-                        <li class="nav-item mx-2">
-                            <a asp-controller="Reserva" asp-action="MisReservas"
-                               class="nav-link px-3 rounded @(currentController == "Reserva" && currentAction == "MisReservas" ? "active" : "")">
-                                Mis Reservas
-                            </a>
-                        </li>
-
-                        <li class="nav-item mx-2">
-                            <a href="@Url.Action("ListarInmuebles", "Catalogo")"
-                               class="nav-link px-3 rounded @(currentController == "Catalogo" && currentAction == "ListarInmuebles" ? "active" : "")">
-                                Catálogo de Inmuebles
-                            </a>
-                        </li>
-
-
-                        <li class="nav-item">
-                            <a asp-controller="Auth" asp-action="Logout"
-                               class="btn btn-danger text-white">
-                                Cerrar Sesión
-                            </a>
-                        </li>
-                    </ul>
+        <nav class="navbar navbar-expand-md navbar-dark custom-navbar px-4 py-3">
+            <a class="navbar-brand d-flex align-items-center" asp-controller="Cliente" asp-action="Index">
+                <img src="@Url.Content("~/imagenes/nav_image.png")" alt="Logo" width="40" height="40">
+                <div>
+                    <span>Web de Reservas</span>
+                    <small>Monterrico Polo</small>
                 </div>
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavCliente"
+                    aria-controls="navbarNavCliente" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNavCliente">
+                <ul class="navbar-nav ms-auto gap-3 align-items-center">
+                    <li class="nav-item">
+                        <a asp-controller="Cliente" asp-action="Index"
+                           class="nav-link custom-nav-link @(currentController == "Cliente" && currentAction == "Index" ? "active" : "")">
+                            Inicio
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a asp-controller="Catalogo" asp-action="ListarInmuebles"
+                           class="nav-link custom-nav-link @(currentController == "Catalogo" && currentAction == "ListarInmuebles" ? "active" : "")">
+                            Inmuebles Disponibles
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a asp-controller="Reserva" asp-action="MisReservas"
+                           class="nav-link custom-nav-link @(currentController == "Reserva" && currentAction == "MisReservas" ? "active" : "")">
+                            Mis Reservas
+                        </a>
+                    </li>
+
+                    <li class="nav-item d-flex align-items-center justify-content-center">
+                        <a asp-controller="Auth" asp-action="Logout" class="btn btn-danger btn-sm">
+                            Cerrar sesión
+                        </a>
+                    </li>
+                </ul>
             </div>
         </nav>
     </header>

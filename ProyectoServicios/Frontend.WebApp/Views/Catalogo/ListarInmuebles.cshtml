@@ -1,7 +1,10 @@
 ﻿@model Shared.Models.CatalogoResponse
 @using Microsoft.AspNetCore.Mvc.Rendering
+
 @{
+    Layout = null;
     ViewData["Title"] = "Inmuebles Disponibles";
+    @Html.Partial("_NavCliente")
 }
 
 @if (Model == null)

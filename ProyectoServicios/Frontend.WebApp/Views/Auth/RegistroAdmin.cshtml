@@ -1,15 +1,103 @@
 ﻿@model Shared.Models.AdministradorDto
 
-<h2>Registro Administrador</h2>
+@{
+    ViewData["Title"] = "Registro de Administrador";
+}
 
-<form method="post" asp-action="RegistroAdmin">
-    <input asp-for="Nombre" placeholder="Nombre" />
-    <input asp-for="Apellido" placeholder="Apellido" />
-    <input asp-for="NroDocumento" placeholder="Número de Documento" />
-    <input asp-for="Telefono" placeholder="Teléfono" />
-    <input asp-for="Correo" placeholder="Correo" />
-    <input asp-for="Clave" type="password" placeholder="Clave" />
-    <button type="submit">Registrar</button>
-</form>
+<link rel="stylesheet" href="@Url.Content("~/css/Registro.css")" />
 
-<p style="color:green;">@ViewBag.Mensaje</p>
+<div class="row">
+    <br />
+    <h2 class="text-center">REGISTRO DE ADMINISTRADOR</h2>
+    <br />
+    <div class="containerRegistro form-horizontal">
+        <form method="post" asp-action="RegistroAdmin" class="container">
+            <div class="row g-3">
+                <!-- Fila 1 -->
+                <div class="col-md-6">
+                    <label class="form-label">Nombre</label>
+                    <input asp-for="Nombre" class="form-control" placeholder="Nombre" />
+                    <span asp-validation-for="Nombre" class="invalid-feedback"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Apellido</label>
+                    <input asp-for="Apellido" class="form-control" placeholder="Apellido" />
+                    <span asp-validation-for="Apellido" class="invalid-feedback"></span>
+                </div>
+
+                <!-- Fila 2 -->
+                <div class="col-md-6">
+                    <label class="form-label">Número de Documento</label>
+                    <input asp-for="NroDocumento" class="form-control" placeholder="Número de Documento" />
+                    <span asp-validation-for="NroDocumento" class="invalid-feedback"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Teléfono</label>
+                    <input asp-for="Telefono" class="form-control" placeholder="Teléfono" />
+                    <span asp-validation-for="Telefono" class="invalid-feedback"></span>
+                </div>
+
+                <!-- Fila 3 -->
+                <div class="col-md-6">
+                    <label class="form-label">Correo</label>
+                    <input asp-for="Correo" type="email" class="form-control" placeholder="Correo" />
+                    <span asp-validation-for="Correo" class="invalid-feedback"></span>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Contraseña</label>
+                    <input asp-for="Clave" type="password" class="form-control" placeholder="Clave" />
+                    <span asp-validation-for="Clave" class="invalid-feedback"></span>
+                </div>
+            </div>
+
+            <!-- Mensajes generales -->
+            @if (!string.IsNullOrEmpty(ViewBag.Mensaje))
+            {
+                <div class="alert alert-success mt-3">@ViewBag.Mensaje</div>
+            }
+            @if (!string.IsNullOrEmpty(ViewBag.Error))
+            {
+                <div class="alert alert-danger mt-3">@ViewBag.Error</div>
+            }
+
+            <!-- Botón -->
+            <div class="d-flex justify-content-center mt-3">
+                <button type="submit" class="btn btn-dark w-50">Registrarse</button>
+            </div>
+            <br />
+
+            <!-- Link -->
+            <div class="back-link text-center">
+                <p>
+                    ¿Ya tienes una cuenta?
+                    <a asp-controller="Auth" asp-action="Login"><strong>Inicia sesión</strong></a>
+                </p>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const inputs = document.querySelectorAll(".form-control");
+
+            inputs.forEach(input => {
+                input.addEventListener("blur", () => { // al salir del input
+                    if (input.classList.contains("input-validation-error")) {
+                        input.classList.add("is-invalid");
+                    } else {
+                        input.classList.remove("is-invalid");
+                    }
+                });
+
+                input.addEventListener("input", () => { // mientras escribe
+                    if (!input.classList.contains("input-validation-error")) {
+                        input.classList.remove("is-invalid");
+                    }
+                });
+            });
+        });
+    </script>
+}
