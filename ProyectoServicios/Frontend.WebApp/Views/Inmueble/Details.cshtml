@@ -70,8 +70,8 @@
             }
         </div>
 
-@if (Model.Latitud != 0 && Model.Longitud != 0)
-{
+        @if (Model.Latitud != 0 && Model.Longitud != 0)
+        {
             <div class="col-md-12 text-center">
                 <label class="control-label">Ubicación en el Mapa</label>
                 <div class="map-wrapper">
@@ -80,7 +80,7 @@
 
                 <script>
                     // Fuerza punto decimal desde Razor -> JS
-                                       const lat = parseFloat('@(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}", Model.Latitud))');
+                                        const lat = parseFloat('@(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}", Model.Latitud))');
                     const lng = parseFloat('@(string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}", Model.Longitud))');
                     const nombre = "@Model.Nombre";
 
@@ -107,8 +107,14 @@
                         defer>
                 </script>
             </div>
-}
-else
-{
+        }
+        else
+        {
             <p><em>Este inmueble no tiene ubicación registrada</em></p>
-}
+        }
+
+        <div class="button-group-container mt-4 text-center">
+            <a asp-action="Index" class="btn btn-secondary">Volver</a>
+        </div>
+    </div>
+</div>

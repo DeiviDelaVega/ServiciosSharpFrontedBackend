@@ -88,7 +88,7 @@ namespace ServicioClientes.API.Controllers
             _context.Administrador.Add(admin);
             _context.SaveChanges();
 
-            return Ok("Administrador registrado");
+            return Ok("Administrador registrado exitosamente");
         }
 
         [HttpPost("login")]

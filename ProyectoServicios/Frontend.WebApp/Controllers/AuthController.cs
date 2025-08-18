@@ -40,6 +40,11 @@ namespace Frontend.WebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(LoginDto dto)
         {
+            if (!ModelState.IsValid)
+            {
+                return View(dto); // Retorna errores de validación del DTO
+            }
+
             var res = await _http.PostAsJsonAsync("api/auth/login", dto);
             if (res.IsSuccessStatusCode)
             {
@@ -72,9 +77,11 @@ namespace Frontend.WebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> RegistroCliente(ClienteDto dto)
         {
+            if (!ModelState.IsValid) return View(dto);
+
             var res = await _http.PostAsJsonAsync("api/auth/register-cliente", dto);
             ViewBag.Mensaje = await res.Content.ReadAsStringAsync();
-            return View();
+            return View(dto);
         }
 
         [HttpGet]
@@ -96,6 +103,8 @@ namespace Frontend.WebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> RegistroAdmin(AdministradorDto dto)
         {
+            if (!ModelState.IsValid) return View(dto);
+
             var token = HttpContext.Session.GetString("token");
             if (token == null) return RedirectToAction("Login");
 
@@ -107,16 +116,15 @@ namespace Frontend.WebApp.Controllers
 
             var res = await _http.SendAsync(req);
             ViewBag.Mensaje = await res.Content.ReadAsStringAsync();
-            return View();
+            return View(dto);
         }
 
         [HttpGet]
         public IActionResult Logout()
         {
             HttpContext.Session.Clear();
+            TempData["LogoutMessage"] = "Se cerró sesión correctamente"; // Guardar el mensaje para mostrarlo en la vista
             return RedirectToAction("Login");
         }
-
-
     }
 }

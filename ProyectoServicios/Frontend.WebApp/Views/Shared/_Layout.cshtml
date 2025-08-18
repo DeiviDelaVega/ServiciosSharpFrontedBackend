@@ -10,23 +10,22 @@
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark navbar-custom">
-            <div class="container d-flex align-items-center">
-                <a class="navbar-brand" href="#" style="font-size: 24px"><strong>Monterrico Polo Aparts</strong></a>
-            </div>
+        <nav class="navbar-dark custom-navbar">
+            <a class="navbar-brand d-flex align-items-center" routerLink="/">
+                <img src="@Url.Content("~/imagenes/nav_image.png")" alt="Logo" width="40" height="40">
+                <div>
+                    <span>Web de Reservas</span>
+                    <small>Monterrico Polo</small>
+                </div>
+            </a>
         </nav>
     </header>
-    <div class="container">
+    <div>
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - Frontend.WebApp - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
