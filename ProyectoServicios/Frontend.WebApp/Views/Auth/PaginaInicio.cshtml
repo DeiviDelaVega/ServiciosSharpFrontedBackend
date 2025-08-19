@@ -1,0 +1,131 @@
+﻿@{
+    Layout = null;
+    ViewData["Title"] = "Pagina de Inicio";
+    bool isAuthenticated = ViewBag.IsAuthenticated ?? false;
+    string role = ViewBag.Role ?? "";
+    string nombre = ViewBag.NombreUsuario ?? "";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>Monterrico Polo Aparts</title>
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="@Url.Content("~/css/PaginaInicio.css")" />
+</head>
+<body>
+    <nav style="background-color: #212529; height: 81px; padding: 15px 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; height: 100%;">
+            <div class="navbar-dark">
+                <a class="navbar-brand d-flex align-items-center" asp-controller="Auth" asp-action="PaginaInicio">
+                    <img src="@Url.Content("~/imagenes/nav_image.png")" alt="Logo" width="40" height="40">
+                    <div>
+                        <span>Web de Reservas</span>
+                        <small>Monterrico Polo</small>
+                    </div>
+                </a>
+            </div>
+
+            <div class="d-flex justify-content-center align-items-center">
+                @if (isAuthenticated)
+                {
+                    <button class="btn btn-secondary btn-sm me-2"
+                            style="font-size: 1rem; padding: 8px 8px;"
+                            onclick="location.href='@Url.Action("ContinuarNavegando", "Auth")'">
+                        <strong>Continuar Navegando</strong>
+                    </button>
+
+                    <a asp-controller="Auth" asp-action="Logout"
+                       class="btn btn-danger btn-sm" style="font-size: 1rem; padding: 8px 8px;">
+                        <strong>Cerrar sesión</strong>
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Auth" asp-action="Login" class="btn btn-success"
+                       style="font-size: 1rem; padding: 8px 8px;">
+                        <strong>Iniciar sesión</strong>
+                    </a>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <header class="text-center">
+        <h1>Monterrico Polo Aparts</h1>
+        <p>Comodidad, estilo y ubicación en un solo lugar</p>
+    </header>
+
+    <div class="container">
+        <section>
+            <img src="@Url.Content("~/imagenes/InmueblesModernos.jpg")" alt="Inmuebles modernos" class="img-fluid" />
+            <div class="texto">
+                <h2>¿Quiénes Somos?</h2>
+                <p>
+                    Monterrico Polo Aparts es una empresa peruana especializada
+                    en el alquiler de departamentos amoblados, pensados para estancias
+                    tanto cortas como prolongadas. Con más de 10 años de experiencia,
+                    nos hemos consolidado como una opción confiable y segura para
+                    quienes buscan alojamiento de calidad en la zona de Surco. Nos
+                    apasiona ofrecer una experiencia única a nuestros clientes, donde
+                    el confort, la privacidad y el diseño moderno se combinan con una
+                    atención personalizada y cálida.
+                </p>
+            </div>
+        </section>
+
+        <section>
+            <img src="@Url.Content("~/imagenes/MisionEmpresarial.jpg")" alt="Misión empresarial" class="img-fluid" />
+            <div class="texto">
+                <h2>Misión</h2>
+                <p>
+                    Nuestra misión es brindar soluciones de alojamiento
+                    eficientes, seguras y cómodas, a través de departamentos equipados
+                    y servicios complementarios que superen las expectativas de
+                    nuestros huéspedes. Nos comprometemos con la excelencia operativa,
+                    la innovación constante y la creación de experiencias memorables
+                    que generen confianza y fidelidad en cada cliente.
+                </p>
+            </div>
+        </section>
+
+        <section>
+            <img src="@Url.Content("~/imagenes/VisionEmpresarial.jpg")" alt="Visión empresarial" class="img-fluid" />
+            <div class="texto">
+                <h2>Visión</h2>
+                <p>
+                    Ser reconocidos como la principal empresa de alquiler de
+                    inmuebles temporales en Surco y expandir nuestra propuesta a otras
+                    ciudades del país, destacando por la calidad de nuestros espacios,
+                    el profesionalismo de nuestro equipo y un compromiso firme con la
+                    sostenibilidad y el desarrollo urbano responsable.
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer-custom mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 text-center">
+                    <h4 class="fw-bold">Contáctanos</h4>
+                    <hr class="hr-centered">
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-whatsapp text-success"></i> <a href="https://wa.me/51972711047">+51 972 711 047</a></li>
+                        <li><i class="bi bi-whatsapp text-success"></i> <a href="https://wa.me/51986656446">+51 986 656 446</a></li>
+                        <li><i class="bi bi-envelope-fill text-danger"></i> <a href="mailto:reservas@monterricopoloaparts.com"> reservas@monterricopoloaparts.com </a></li>
+                    </ul>
+                </div>
+                <div class="col-md-6 text-center">
+                    <h4 class="fw-bold">MonterricoPoloAparts</h4>
+                    <hr class="hr-centered">
+                    <p>Ofrecemos inmuebles seguros y totalmente verificados para alquilar.<br />Encuentra con nosotros el lugar perfecto para vivir</p>
+                </div>
+            </div>
+            <div class="footer-bottom">&copy; 2025 Monterrico Polo Aparts. Todos los derechos reservados</div>
+        </div>
+    </footer>
+</body>
+</html>

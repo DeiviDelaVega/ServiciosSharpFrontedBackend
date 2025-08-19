@@ -73,7 +73,7 @@ app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllerRoute(
         name: "default",
-        pattern: "{controller=Auth}/{action=Login}/{id?}");
+        pattern: "{controller=Auth}/{action=PaginaInicio}/{id?}");
 
     var routeEndpoints = endpoints.DataSources
         .SelectMany(ds => ds.Endpoints)

@@ -120,5 +120,44 @@ namespace Frontend.WebApp.Controllers
             TempData["LogoutMessage"] = "Se cerró sesión correctamente"; // Guardar el mensaje para mostrarlo en la vista
             return RedirectToAction("Login");
         }
+
+        [HttpGet]
+        public IActionResult PaginaInicio()
+        {
+            var token = HttpContext.Session.GetString("token");
+            if (string.IsNullOrEmpty(token))
+            {
+                ViewBag.IsAuthenticated = false;
+                return View();
+            }
+
+            var handler = new JwtSecurityTokenHandler();
+            var jwt = handler.ReadJwtToken(token);
+
+            var rol = jwt.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+            var nombreUsuario = jwt.Claims.FirstOrDefault(c => c.Type == "NombreCompleto")?.Value;
+
+            ViewBag.IsAuthenticated = true;
+            ViewBag.Role = rol;
+            ViewBag.NombreUsuario = nombreUsuario;
+
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult ContinuarNavegando()
+        {
+            var token = HttpContext.Session.GetString("token");
+            if (token == null) return RedirectToAction("Login");
+
+            var handler = new JwtSecurityTokenHandler();
+            var jwt = handler.ReadJwtToken(token);
+            var rol = jwt.Claims.First(c => c.Type == ClaimTypes.Role).Value;
+
+            if (rol == "admin") return RedirectToAction("Index", "Admin");
+            if (rol == "cliente") return RedirectToAction("Index", "Cliente");
+
+            return RedirectToAction("PaginaInicio");
+        }
     }
 }
