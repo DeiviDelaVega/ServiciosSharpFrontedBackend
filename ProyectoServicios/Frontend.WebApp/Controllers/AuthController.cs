@@ -3,6 +3,7 @@ using Shared.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Json;
 using System.Security.Claims;
+using DNTCaptcha.Core;
 
 namespace Frontend.WebApp.Controllers
 {
@@ -18,7 +19,6 @@ namespace Frontend.WebApp.Controllers
         [HttpGet]
         public IActionResult Login()
         {
-            // Revisar si ya hay token en sesión
             var tokenString = HttpContext.Session.GetString("token");
             if (!string.IsNullOrEmpty(tokenString))
             {
@@ -26,24 +26,20 @@ namespace Frontend.WebApp.Controllers
                 var token = handler.ReadJwtToken(tokenString);
                 var rol = token.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
 
-                if (rol == "admin")
-                    return RedirectToAction("Index", "Admin");
-                else if (rol == "cliente")
-                    return RedirectToAction("Index", "Cliente");
+                if (rol == "admin") return RedirectToAction("Index", "Admin");
+                if (rol == "cliente") return RedirectToAction("Index", "Cliente");
             }
-
-            // Si no hay token, mostrar login
             return View();
         }
 
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ValidateDNTCaptcha (ErrorMessage = "Captcha Invalido")]
         public async Task<IActionResult> Login(LoginDto dto)
         {
             if (!ModelState.IsValid)
-            {
-                return View(dto); // Retorna errores de validación del DTO
-            }
+                return View(dto);
 
             var res = await _http.PostAsJsonAsync("api/auth/login", dto);
             if (res.IsSuccessStatusCode)
@@ -55,13 +51,11 @@ namespace Frontend.WebApp.Controllers
                 var token = handler.ReadJwtToken(tokenObj.Token);
                 var rol = token.Claims.First(c => c.Type == ClaimTypes.Role).Value;
                 var nombreCompleto = token.Claims.FirstOrDefault(c => c.Type == "NombreCompleto")?.Value;
-
                 HttpContext.Session.SetString("nombreUsuario", nombreCompleto ?? "");
 
-                if (rol == "admin")
-                    return RedirectToAction("Index", "Admin");
-                else
-                    return RedirectToAction("Index", "Cliente");
+                return rol == "admin"
+                    ? RedirectToAction("Index", "Admin")
+                    : RedirectToAction("Index", "Cliente");
             }
 
             ViewBag.Mensaje = "Credenciales inválidas";

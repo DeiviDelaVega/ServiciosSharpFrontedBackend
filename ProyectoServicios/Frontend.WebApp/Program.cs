@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Localization;
+﻿using DNTCaptcha.Core;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.Options;
 using Stripe;
 using System.Globalization;
 
@@ -27,16 +29,22 @@ builder.Services.AddHttpClient("ServicioInmuebles", c =>
 builder.Services.AddHttpClient("ServicioReservas", c =>
     c.BaseAddress = new Uri(builder.Configuration["ApiUrls:ServicioReservas"]!));
 
+builder.Services.AddDNTCaptcha(o =>
+{
+    o.UseSessionStorageProvider();
+    o.WithEncryptionKey("mysupersecret_dntcaptcha_encryption_key_2025");
+    o.ShowThousandsSeparators(false);
+    o.AbsoluteExpiration(minutes: 7);
 
-builder.Services.AddHttpClient("ServicioReservas", c =>
-    c.BaseAddress = new Uri(builder.Configuration["ApiUrls:ServicioReservas"]!));
-
+});
+// Session config
 builder.Services.AddSession(o =>
 {
     o.IdleTimeout = TimeSpan.FromHours(3);
     o.Cookie.HttpOnly = true;
     o.Cookie.IsEssential = true;
 });
+
 
 var app = builder.Build();
 
