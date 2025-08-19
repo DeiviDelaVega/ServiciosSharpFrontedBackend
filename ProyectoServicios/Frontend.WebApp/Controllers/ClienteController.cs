@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Frontend.WebApp.Controllers
 {
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public class ClienteController : Controller
     {
         private readonly HttpClient _httpClient;

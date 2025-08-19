@@ -12,6 +12,7 @@
                 <h3 class="mb-4">Inicio de sesión</h3>
 
                 <form method="post" asp-action="Login">
+                    @Html.AntiForgeryToken()
                     <div class="mb-3">
                         <label class="form-label">Correo electrónico</label>
                         <input asp-for="Correo" type="email" class="form-control" placeholder="cliente@example.com" />
@@ -23,7 +24,29 @@
                         <input asp-for="Clave" type="password" class="form-control" placeholder="Tu contraseña" />
                         <span asp-validation-for="Clave" class="invalid-feedback"></span>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label d-block">Verificación</label>
+                        <dnt-captcha asp-captcha-generator-language="English"
+                                     asp-captcha-generator-display-mode="ShowDigits"
+                                     asp-captcha-min-length="5"
+                                     asp-captcha-max-length="5"
+                                     asp-use-letters="true"
+                                     asp-use-numbers="false"
+                                     asp-allowed-chars="ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+                                     asp-text-box-template-name="DNTCaptchaText"
+                                     asp-text-box-class="form-control"
+                                     asp-placeholder="Escribe los números"
+                                     asp-dir="ltr"
+                                     asp-font-name="Arial"
+                                     asp-font-size="26"
+                                     asp-validation-error-message="Captcha inválido."
+                                     asp-show-refresh-button="true" />
+                        <span asp-validation-for="DNTCaptchaText" class="text-danger"></span>
 
+
+
+
+                    </div>
                     @if (!string.IsNullOrEmpty(ViewBag.Mensaje))
                     {
                         <div class="alert alert-danger">@ViewBag.Mensaje</div>

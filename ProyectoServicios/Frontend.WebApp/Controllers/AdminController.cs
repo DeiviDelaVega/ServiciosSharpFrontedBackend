@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Frontend.WebApp.Controllers
 {
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public class AdminController : Controller
     {
         public override void OnActionExecuting(ActionExecutingContext context)

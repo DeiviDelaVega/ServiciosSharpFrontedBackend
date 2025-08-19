@@ -17,5 +17,7 @@ namespace Shared.Models
         [Required(ErrorMessage = "La contraseña es obligatoria")]
         [StringLength(255, MinimumLength = 6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
         public string? Clave { get; set; }
+
+        public string DNTCaptchaText { get; set; }
     }
 }
