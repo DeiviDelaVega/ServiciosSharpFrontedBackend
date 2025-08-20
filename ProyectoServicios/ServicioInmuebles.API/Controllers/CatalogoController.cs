@@ -75,7 +75,7 @@ namespace ServicioInmuebles.API.Controllers
         [HttpGet("ListarInmuebles")]
         public async Task<IActionResult> ListarInmuebles(
     [FromQuery] int pageNumber = 1,
-    [FromQuery] int pageSize = 5,
+    [FromQuery] int pageSize = 6,
     [FromQuery] string filtro = "",
     [FromQuery] decimal? precioDesde = null,
     [FromQuery] decimal? precioHasta = null,
