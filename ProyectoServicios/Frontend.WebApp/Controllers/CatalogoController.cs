@@ -103,11 +103,11 @@ namespace Frontend.WebApp.Controllers
             try
             {
                 ViewData["EstadoOptions"] = new List<SelectListItem>
-        {
-            new SelectListItem { Value = "", Text = "-- Seleccionar --" },
-            new SelectListItem { Value = "Si", Text = "Disponible" },
-            new SelectListItem { Value = "No", Text = "Ocupado" }
-        };
+                {
+                    new SelectListItem { Value = "", Text = "-- Seleccionar --" },
+                    new SelectListItem { Value = "Si", Text = "Disponible" },
+                    new SelectListItem { Value = "No", Text = "Ocupado" }
+                };
 
                 var client = CrearClienteConToken();
                 if (client == null)
@@ -149,8 +149,6 @@ namespace Frontend.WebApp.Controllers
                     ViewBag.MensajeSancion = response.Alerta ?? "Su cuenta está sancionada.";
                     ViewBag.LinkMotivoSancion = Url.Action("MotivoSancion", "Catalogo");
                 }
-                return View(response);
-
 
                 ViewBag.Filtro = filtro;
                 ViewBag.PrecioDesde = precioDesde;
