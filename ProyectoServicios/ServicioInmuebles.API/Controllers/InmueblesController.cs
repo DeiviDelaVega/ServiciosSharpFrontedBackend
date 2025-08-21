@@ -151,5 +151,22 @@ namespace ServicioInmuebles.API.Controllers
             await _ctx.SaveChangesAsync();
             return NoContent();
         }
+
+        // Para Reporte
+        [HttpGet("Obtener/{id}")]
+        public IActionResult GetInmueble(int id)
+        {
+            var inmueble = _ctx.Inmueble
+                .Where(i => i.IdInmueble == id)
+                .Select(i => new InmuebleDto
+                {
+                    IdInmueble = i.IdInmueble,
+                    Nombre = i.Nombre
+                })
+                .FirstOrDefault();
+
+            if (inmueble == null) return NotFound();
+            return Ok(inmueble);
+        }
     }
 }

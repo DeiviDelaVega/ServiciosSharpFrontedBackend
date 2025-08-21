@@ -183,5 +183,22 @@ namespace ServicioClientes.API.Controllers
             return Ok(cliente);
         }
 
+        // Para Reporte
+        [HttpGet("Obtener/{id}")]
+        public IActionResult GetClientes(int id)
+        {
+            var cliente = _context.Cliente
+                .Where(c => c.ID_Cliente == id)
+                .Select(c => new ClienteDto
+                {
+                    IdCliente = c.ID_Cliente,
+                    Nombre = c.Nombre,
+                    Apellido = c.Apellido
+                })
+                .FirstOrDefault();
+
+            if (cliente == null) return NotFound();
+            return Ok(cliente);
+        }
     }
 }
