@@ -1,0 +1,67 @@
+﻿.fade-in {
+    animation: fadeIn2 0.5s ease-in-out forwards;
+}
+
+@keyframes fadeIn2 {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.chart-container {
+    position: relative; /* Importante para que el canvas se ajuste */
+    width: 60%;
+    height: 400px; 
+    margin: 0 auto;
+    padding: 16px;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 1200px) {
+    .chart-title {
+        font-size: 2em;
+    }
+}
+
+@media (max-width: 600px) {
+    .chart-title {
+        font-size: 1.2em;
+    }
+
+    .chart-legend {
+        font-size: 0.8em;
+    }
+}
+
+@media (max-width: 480px) {
+    h2 {
+        font-size: 18px;
+        text-align: center;
+        padding: 0 10px;
+    }
+
+    .fade-in {
+        padding: 0 12px;
+    }
+
+    .chart-container {
+        width: 100% !important;
+        margin: 0 auto !important;
+    }
+
+    canvas {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+}
