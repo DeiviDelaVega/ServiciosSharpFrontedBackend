@@ -3,7 +3,10 @@
 @{
     Layout = null;
     ViewData["Title"] = "Editar Cliente";
-    @Html.Partial("_NavAdmin")
+
+    var currentController = (ViewContext.RouteData.Values["controller"] ?? "").ToString();
+    var currentAction = (ViewContext.RouteData.Values["action"] ?? "").ToString();
+
 }
 
 <!DOCTYPE html>
@@ -31,11 +34,91 @@
         }
     </script>
 
+    <link rel="stylesheet" href="@Url.Content("~/css/NavCliente.css")" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="font-sans bg-[#f5f5f5] text-[#1a1a1a]">
+    <!-- NAVBAR  -->
+    <header>
+        <nav class="navbar navbar-expand-md navbar-dark custom-navbar px-4 py-3">
+            <!-- Logo -->
+            <a class="navbar-brand d-flex align-items-center" asp-controller="Auth" asp-action="PaginaInicio">
+                <img src="@Url.Content("~/imagenes/nav_image.png")" alt="Logo" width="40" height="40">
+                <div>
+                    <span>Web de Reservas</span>
+                    <small>Monterrico Polo</small>
+                </div>
+            </a>
+
+            <!-- Botón hamburguesa -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAdmin"
+                    aria-controls="navbarNavAdmin" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- Menú horizontal -->
+            <div class="navbar-collapse" id="navbarNavAdmin">
+                <ul class="navbar-nav ms-auto gap-3 align-items-center">
+                    <li class="nav-item">
+                        <a asp-controller="Admin" asp-action="Index"
+                           class="nav-link custom-nav-link @(currentAction == "Index" && currentController == "Admin" ? "active" : "")">
+                            Inicio
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a asp-controller="Cliente" asp-action="ListClientes"
+                           class="nav-link custom-nav-link @((currentController == "Cliente" ? "active" : ""))">
+                            Mantenimiento de Clientes
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a asp-controller="Inmueble" asp-action="Index"
+                           class="nav-link custom-nav-link @((currentController == "Inmueble" ? "active" : ""))">
+                            Mantenimiento de Inmuebles
+                        </a>
+                    </li>
+
+                    <li class="nav-item">
+                        <a asp-controller="Reserva" asp-action="Index"
+                           class="nav-link custom-nav-link @((currentController == "Reserva" ? "active" : ""))">
+                            Mantenimiento de Reservas
+                        </a>
+                    </li>
+
+                    <!-- Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle custom-nav-link @(currentController == "Reportes" ? "active" : "")"
+                           href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Reportes
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark">
+                            <li>
+                                <a asp-controller="Reportes" asp-action="InmueblesMasReservados" class="dropdown-item">
+                                    Inmuebles más reservados
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-controller="Reportes" asp-action="ClientesConMasReservas" class="dropdown-item">
+                                    Clientes con más reservas
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    <li class="nav-item">
+                        <a asp-controller="Auth" asp-action="Logout" class="btn btn-danger btn-sm">
+                            Cerrar sesión
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
     <br />
 
     <div class="max-w-2xl mx-auto my-5 p-6 bg-white rounded-lg shadow-xl animate-fade-in">
@@ -158,5 +241,7 @@
             });
         });
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>s
