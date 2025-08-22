@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using ServicioClientes.API.Data;
+using ServicioClientes.API.Services;
 using System.Text;
 
 
@@ -44,6 +45,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 Encoding.UTF8.GetBytes(key))
         };
     });
+
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 
 builder.Services.AddAuthorization();
 

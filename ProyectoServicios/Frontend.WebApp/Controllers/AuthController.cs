@@ -74,7 +74,15 @@ namespace Frontend.WebApp.Controllers
             if (!ModelState.IsValid) return View(dto);
 
             var res = await _http.PostAsJsonAsync("api/auth/register-cliente", dto);
-            ViewBag.Mensaje = await res.Content.ReadAsStringAsync();
+            if (res.IsSuccessStatusCode)
+            {
+                var mensajeApi = await res.Content.ReadAsStringAsync();
+                ViewBag.Mensaje = mensajeApi + " - 📧 Correo enviado";
+            }
+            else
+            {
+                ViewBag.Error = await res.Content.ReadAsStringAsync();
+            }
             return View(dto);
         }
 
