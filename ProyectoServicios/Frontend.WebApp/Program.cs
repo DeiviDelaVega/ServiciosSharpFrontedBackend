@@ -14,6 +14,13 @@ var loc = new RequestLocalizationOptions
     SupportedUICultures = new List<CultureInfo> { us },
 };
 
+
+builder.Services.AddHttpClient("ServicioReservas", c =>
+{
+    c.BaseAddress = new Uri("https://localhost:7185/"); // URL de tu ServicioReservas.API
+});
+
+
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 // Add services to the container.

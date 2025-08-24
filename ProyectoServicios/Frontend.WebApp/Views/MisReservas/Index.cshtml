@@ -1,0 +1,343 @@
+﻿@model Frontend.WebApp.Models.MisReservasViewModel
+@{
+    ViewData["Title"] = "Mis Reservas";
+    Layout = null;
+    @Html.Partial("_NavCliente")
+    ;
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<div class="container pt-3 fade-in">
+    <h4 class="text-center mb-3">🗓️ Mis Reservas Pagadas</h4>
+
+    <!-- Notificaciones -->
+    @if (TempData["Ok"] != null)
+    {
+        <div class="alert alert-success text-center">@TempData["Ok"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger text-center">@TempData["Error"]</div>
+    }
+
+    <!-- Modal sanción -->
+    @if (Model.ModalSancion)
+    {
+        <div class="alert alert-warning text-center">
+            <strong>@Model.Alerta</strong>
+        </div>
+    }
+
+    <!-- Sin reservas -->
+    @if (Model.TotalElementos == 0)
+    {
+        <div class="alert alert-info text-center p-2 small">
+            No tienes reservas registradas.
+        </div>
+    }
+
+    <!-- Lista de reservas -->
+    @if (Model.EsActivo && Model.Reservas.Any())
+    {
+        @foreach (var reserva in Model.Reservas)
+        {
+            if (reserva != null && reserva.Inmueble != null)
+            {
+                <div id="card-@reserva.ID_Solicitud" class="card mb-2 shadow-sm reserva-card">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <img src="@reserva.Inmueble.ImagenHabitacion" class="img-fluid rounded-start" alt="Imagen del inmueble">
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body d-flex flex-column justify-content-between h-100 p-2">
+                                <h5 class="card-title text-center mb-2">
+                                    <strong id="nombre-@reserva.ID_Solicitud">@reserva.Inmueble.Nombre</strong>
+                                </h5>
+
+                                <div class="d-flex justify-content-between mb-1">
+                                    <p class="mb-0">
+                                        <strong>Descripción:</strong>
+                                        <span id="descripcion-@reserva.ID_Solicitud">@reserva.Inmueble.Descripcion</span>
+                                    </p>
+                                    <p class="mb-0">
+                                        <strong>Servicios:</strong>
+                                        <span id="servicios-@reserva.ID_Solicitud">@reserva.Inmueble.ServiciosIncluidos</span>
+                                    </p>
+                                </div>
+
+                                <div class="d-flex justify-content-between mb-1">
+                                    <p class="mb-0">
+                                        <strong>Desde:</strong>
+                                        <span id="inicio-@reserva.ID_Solicitud">@reserva.Fecha_Inicio_Reserva.ToString("dd/MM/yyyy")</span><br />
+                                        <strong>Hasta:</strong>
+                                        <span id="fin-@reserva.ID_Solicitud">@reserva.Fecha_Fin_Reserva.ToString("dd/MM/yyyy")</span>
+                                    </p>
+                                    <p class="mb-0">
+                                        <strong>Total:</strong>
+                                        S/. <span id="total-@reserva.ID_Solicitud">@reserva.Monto_Total.ToString("N2")</span>
+                                    </p>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mt-2 px-1">
+                                    <span id="estado-@reserva.ID_Solicitud" class="badge bg-success estado-texto">@reserva.Estado_Reserva</span>
+
+                                    <button class="btn btn-primary btn-sm" onclick="generarPDF(@reserva.ID_Solicitud)">
+                                        <i class="fas fa-file-pdf"></i> Descargar PDF
+                                    </button>
+
+                                    @* ✅ Mostrar botón según flag del backend *@
+                                    @if (reserva.Reembolsable)
+                                    {
+                                        <div class="d-flex align-items-center gap-2 reembolso-wrap"
+                                             data-id="@reserva.ID_Solicitud"
+                                             data-restante="@((reserva.TiempoRestanteReembolsoMs ?? 0))">
+                                            <form asp-controller="MisReservas"
+                                                  asp-action="Reembolsar"
+                                                  asp-route-id="@reserva.ID_Solicitud"
+                                                  method="post" class="form-reembolso">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="page" value="@Model.Page" />
+                                                <input type="hidden" name="size" value="@Model.Size" />
+                                                <button type="submit" class="btn btn-danger btn-reembolso">Reembolsar</button>
+                                            </form>
+
+
+
+                                            @if (reserva.TiempoRestanteReembolsoMs.HasValue)
+                                            {
+                                                <small class="text-muted">
+                                                    Quedan <span class="countdown" id="cd-@reserva.ID_Solicitud"></span>
+                                                </small>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" disabled
+                                                title="Fuera de la ventana de reembolso">
+                                            Reembolsar
+                                        </button>
+                                    }
+
+                                    <a asp-controller="Catalogo" asp-action="Detalle" asp-route-id="@reserva.Inmueble.IdInmueble"
+                                       class="btn btn-dark btn-sm btn-ver">
+                                        <i class="fas fa-eye"></i> Ver
+                                    </a>
+
+                                    <!-- ocultos para PDF -->
+                                    <span id="nombreCliente-@reserva.ID_Solicitud" style="display:none;">
+                                        @Model.NombreCliente
+                                    </span>
+                                    <span id="fechaSolicitud-@reserva.ID_Solicitud" style="display:none;">
+                                        @reserva.Fecha_Solicitud
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    }
+
+
+    <nav class="d-flex justify-content-center mt-4">
+        <!-- Primera -->
+        <a class="btn btn-outline-secondary m-1 @(ViewBag.PaginaActual == 1 ? "disabled" : "")"
+           asp-action="Index"
+           asp-route-page="1">
+            Primera
+        </a>
+
+        <!-- Prev -->
+        <a class="btn btn-outline-secondary m-1 @(ViewBag.PaginaActual == 1 ? "disabled" : "")"
+           asp-action="Index"
+           asp-route-pagea="@(ViewBag.PaginaActual - 1)">
+            &laquo; Prev
+        </a>
+
+        <!-- Números -->
+        @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+        {
+            if (i == ViewBag.PaginaActual)
+            {
+                <span class="btn btn-dark m-1">@i</span>
+            }
+            else
+            {
+                <a class="btn btn-outline-secondary m-1"
+                   asp-action="Index"
+                   asp-route-page="@i">@i</a>
+            }
+        }
+
+        <!-- Next -->
+        <a class="btn btn-outline-secondary m-1 @(ViewBag.PaginaActual == ViewBag.TotalPaginas ? "disabled" : "")"
+           asp-action="Index"
+           asp-route-page="@(ViewBag.PaginaActual + 1)">
+            Next &raquo;
+        </a>
+
+        <!-- Última -->
+        <a class="btn btn-outline-secondary m-1 @(ViewBag.PaginaActual == ViewBag.TotalPaginas ? "disabled" : "")"
+           asp-action="Index"
+           asp-route-page="@ViewBag.TotalPaginas">
+            Última
+        </a>
+    </nav>
+
+</div>
+
+<!-- JS: sweetalert2, bootstrap, pdf -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+<!-- ================================= -->
+<!-- Script para generación de PDFs -->
+<!-- ================================= -->
+<script>
+    function generarPDF(id) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        const nombre = document.getElementById(`nombre-${id}`)?.innerText || "";
+        const descripcion = document.getElementById(`descripcion-${id}`)?.innerText || "";
+        const servicios = document.getElementById(`servicios-${id}`)?.innerText || "";
+        const inicio = document.getElementById(`inicio-${id}`)?.innerText || "";
+        const fin = document.getElementById(`fin-${id}`)?.innerText || "";
+        const total = document.getElementById(`total-${id}`)?.innerText || "0.00";
+        const estado = document.getElementById(`estado-${id}`)?.innerText || "";
+        const cliente = document.getElementById(`nombreCliente-${id}`)?.innerText || "";
+        const fechaSolicitud = document.getElementById(`fechaSolicitud-${id}`)?.innerText || "";
+
+        // Encabezado
+        doc.setFillColor(41, 128, 185);
+        doc.rect(0, 0, 210, 30, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(18);
+        doc.text("Reporte de Reserva", 14, 20);
+
+        // Contenido
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(12);
+
+        doc.autoTable({
+            startY: 40,
+            theme: "grid",
+            head: [["Campo", "Detalle"]],
+            body: [
+                ["Cliente", cliente],
+                ["Inmueble", nombre],
+                ["Descripción", descripcion],
+                ["Servicios", servicios],
+                ["Fecha Inicio", inicio],
+                ["Fecha Fin", fin],
+                ["Monto Total", `S/. ${total}`],
+                ["Estado", estado],
+                ["Fecha de Solicitud", fechaSolicitud],
+            ],
+            styles: { fontSize: 11, cellPadding: 5 },
+            headStyles: { fillColor: [41, 128, 185], textColor: 255, halign: "center" },
+            bodyStyles: { fillColor: [245, 245, 245] },
+            alternateRowStyles: { fillColor: [255, 255, 255] },
+        });
+
+        // Footer
+        const pageHeight = doc.internal.pageSize.height;
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text("Generado automáticamente por el sistema de reservas", 14, pageHeight - 10);
+
+        doc.save(`reserva_${id}.pdf`);
+    }
+</script>
+
+
+<!-- ================================= -->
+<!-- Script para countdown y confirmación -->
+<!-- ================================= -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Countdown de reembolso
+        document.querySelectorAll(".reembolso-wrap").forEach(wrap => {
+            const id = wrap.getAttribute("data-id");
+            let restante = Number(wrap.getAttribute("data-restante") || "0");
+            const btn = wrap.querySelector(".btn-reembolso");
+            const cd = document.getElementById(`cd-${id}`);
+
+            if (!restante || !btn || !cd) return;
+
+            const tick = () => {
+                if (restante <= 0) {
+                    btn.disabled = true;
+                    btn.title = "El tiempo de reembolso ha expirado";
+                    cd.textContent = "00:00";
+                    clearInterval(timer);
+                    return;
+                }
+                const s = Math.floor(restante / 1000);
+                const mm = String(Math.floor(s / 60)).padStart(2, '0');
+                const ss = String(s % 60).padStart(2, '0');
+                cd.textContent = `${mm}:${ss}`;
+                restante -= 1000;
+            };
+
+            tick();
+            const timer = setInterval(tick, 1000);
+        });
+
+        // Confirmación de reembolso
+        document.querySelectorAll(".form-reembolso").forEach(form => {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                Swal.fire({
+                    title: "¿Estás seguro?",
+                    text: "Una vez confirmado, iniciaremos el proceso de reembolso.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#6c757d",
+                    confirmButtonText: "Sí, reembolsar",
+                    cancelButtonText: "Cancelar"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+
+<!-- ================================= -->
+<!-- Notificaciones con TempData -->
+<!-- ================================= -->
+@if (TempData["Ok"] != null)
+{
+    <script>
+        Swal.fire({
+            title: "Reembolso solicitado ✅",
+            text: "Recibirás tu dinero en 5 días hábiles.",
+            icon: "success",
+            confirmButtonText: "Aceptar"
+        });
+    </script>
+}
+
+@if (TempData["Error"] != null)
+{
+    <script>
+        Swal.fire({
+            title: "Error",
+            text: "@TempData["Error"]",
+            icon: "error",
+            confirmButtonText: "Aceptar"
+        });
+    </script>
+}
+
