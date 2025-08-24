@@ -13,7 +13,6 @@ namespace ServicioClientes.API.Controllers
     [Route("api/[controller]")]
     public class AuthController : Controller
     {
-
         private readonly ClientesDbContext _context;
         private readonly IConfiguration _config;
 
@@ -26,10 +25,9 @@ namespace ServicioClientes.API.Controllers
         [HttpPost("register-cliente")]
         public IActionResult RegisterCliente(ClienteDto dto)
         {
-
             if (_context.Usuario.Any(u => u.Correo == dto.Correo))
             {
-                return BadRequest("El correo ya esta registrado.");
+                return BadRequest("El correo ya está registrado.");
             }
 
             var usuario = new Usuario
@@ -58,13 +56,12 @@ namespace ServicioClientes.API.Controllers
             return Ok("Cliente registrado exitosamente");
         }
 
-        [HttpPost("register-admin")] 
+        [HttpPost("register-admin")]
         public IActionResult RegisterAdmin(AdministradorDto dto)
         {
-
             if (_context.Usuario.Any(u => u.Correo == dto.Correo))
             {
-                return BadRequest("El correo ya esta registrado.");
+                return BadRequest("El correo ya está registrado.");
             }
 
             var usuario = new Usuario
@@ -81,7 +78,6 @@ namespace ServicioClientes.API.Controllers
                 NroDocumento = dto.NroDocumento!,
                 Telefono = dto.Telefono!,
                 Correo = dto.Correo!
-
             };
 
             _context.Usuario.Add(usuario);
@@ -96,9 +92,10 @@ namespace ServicioClientes.API.Controllers
         {
             var usuario = _context.Usuario.SingleOrDefault(u => u.Correo == dto.Correo);
             if (usuario == null || !BCrypt.Net.BCrypt.Verify(dto.Clave, usuario.Clave))
-                return Unauthorized("Credenciales invalidas");
+                return Unauthorized("Credenciales inválidas");
 
             int? adminId = null;
+            int? clienteId = null;
             string nombreCompleto = "";
 
             if (usuario.Rol == "admin")
@@ -110,15 +107,16 @@ namespace ServicioClientes.API.Controllers
             else if (usuario.Rol == "cliente")
             {
                 var cliente = _context.Cliente.FirstOrDefault(c => c.Correo == usuario.Correo);
+                clienteId = cliente?.ID_Cliente; // 👈 NUEVO
                 nombreCompleto = $"{cliente?.Nombre} {cliente?.Apellido}";
             }
 
-            var token = GenerateJwtToken(usuario, adminId, nombreCompleto);
+            var token = GenerateJwtToken(usuario, adminId, clienteId, nombreCompleto);
 
-            return Ok(new {token});
+            return Ok(new { token });
         }
 
-        private string GenerateJwtToken(Usuario usuario, int? adminId, string nombreCompleto)
+        private string GenerateJwtToken(Usuario usuario, int? adminId, int? clienteId, string nombreCompleto)
         {
             var claims = new List<Claim>
             {
@@ -130,6 +128,9 @@ namespace ServicioClientes.API.Controllers
             if (adminId.HasValue)
                 claims.Add(new Claim(ClaimTypes.NameIdentifier, adminId.Value.ToString()));
 
+            if (clienteId.HasValue)
+                claims.Add(new Claim("ID_Cliente", clienteId.Value.ToString())); // 👈 NUEVO claim
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -139,8 +140,7 @@ namespace ServicioClientes.API.Controllers
                 claims,
                 expires: DateTime.Now.AddHours(3),
                 signingCredentials: creds
-                
-                );
+            );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }

@@ -40,6 +40,10 @@ namespace Shared.Models
             ErrorMessage = "Estado inválido. Valores permitidos: Solicitado, Aprobado, Cancelado, Finalizado")]
         public string Estado_Reserva { get; set; } = "Solicitado";
 
+        public bool Reembolsable { get; set; }
+        public long? TiempoRestanteReembolsoMs { get; set; }
+
+
         // Propiedades de navegación para mostrar información relacionada
         public ClienteDto? Cliente { get; set; }
         public InmuebleDto? Inmueble { get; set; }
