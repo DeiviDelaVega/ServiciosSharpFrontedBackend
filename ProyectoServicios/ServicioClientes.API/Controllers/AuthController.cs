@@ -2,6 +2,7 @@
 using Microsoft.IdentityModel.Tokens;
 using ServicioClientes.API.Data;
 using ServicioClientes.API.Models;
+using ServicioClientes.API.Services;
 using Shared.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -15,20 +16,24 @@ namespace ServicioClientes.API.Controllers
     {
         private readonly ClientesDbContext _context;
         private readonly IConfiguration _config;
+        private readonly IEmailSender _email;
 
-        public AuthController(ClientesDbContext context, IConfiguration config)
+        public AuthController(ClientesDbContext context, IConfiguration config, IEmailSender email)
         {
             _context = context;
             _config = config;
+            _email = email;
         }
 
         [HttpPost("register-cliente")]
-        public IActionResult RegisterCliente(ClienteDto dto)
+        public async Task<IActionResult> RegisterCliente(ClienteDto dto)
         {
             if (_context.Usuario.Any(u => u.Correo == dto.Correo))
+
             {
                 return BadRequest("El correo ya está registrado.");
             }
+
 
             var usuario = new Usuario
             {
@@ -51,7 +56,9 @@ namespace ServicioClientes.API.Controllers
 
             _context.Usuario.Add(usuario);
             _context.Cliente.Add(cliente);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
+
+            try { await _email.SendWelcomeAsync(dto.Correo!, dto.Nombre!); } catch { }
 
             return Ok("Cliente registrado exitosamente");
         }
