@@ -8,35 +8,102 @@
 }
 <link rel="stylesheet" href="@Url.Content("~/css/Reportes.css")" />
 
-<div class="fade-in">
+<div class="reporte-container fade-in text-center">
     <br />
-    <h2 style="text-align:center;">Clientes Con Más Reservas</h2>
-    <br>
-    <div class="chart-container" style="width: 60%; margin: auto;">
+    <h2 class="titulo">📊 Clientes Con Más Reservas</h2>
+
+    <!-- Selector de tipo de gráfico -->
+    <div class="tipo-grafico-container">
+        <label for="tipoGrafico">Tipo de gráfico: </label>
+        <select id="tipoGrafico">
+            <option value="bar">Barras</option>
+            <option value="pie">Pastel</option>
+            <option value="doughnut">Dona</option>
+        </select>
+    </div>
+    <br />
+    <!-- Contenedor del gráfico -->
+    <div class="chart-wrapper chart-container">
         <canvas id="graficoClientes"></canvas>
     </div>
-    <br>
 </div>
+
+<style>
+    /* Ajuste para gráficos circulares */
+    .chart-container {
+        width: 60%;
+        margin: auto;
+        position: relative;
+        max-width: 600px;
+        height: 500px; /* altura fija para mantener proporción */
+    }
+</style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const labels = @Html.Raw(Json.Serialize(labels));
     const valores = @Html.Raw(Json.Serialize(valores));
 
-    new Chart(document.getElementById('graficoClientes'), {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Cantidad de Reservas',
-                data: valores,
-                backgroundColor: 'rgba(75, 192, 192, 0.7)'
-            }]
-        },
-            options: {
-            responsive: true,
-            maintainAspectRatio: false
+    let chart; // Referencia global
+
+    // Función para renderizar gráfico
+    function renderChart(tipo) {
+        const ctx = document.getElementById('graficoClientes').getContext('2d');
+
+        if (chart) {
+            chart.destroy();
         }
+
+        // Configuración dinámica
+        let opciones = {
+            responsive: true,
+            maintainAspectRatio: (tipo === "pie" || tipo === "doughnut"), // true solo para circulares
+            plugins: {
+                legend: { display: tipo !== 'bar', position: 'top' }
+            }
+        };
+
+        // Solo en barras mostramos eje Y
+        if (tipo === "bar") {
+            opciones.scales = {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Reservas'
+                    }
+                }
+            };
+        }
+
+        chart = new Chart(ctx, {
+            type: tipo,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Cantidad de Reservas',
+                    data: valores,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)'
+                    ]
+                }]
+            },
+            options: opciones
+        });
+    }
+
+    // Render inicial en "bar"
+    renderChart('bar');
+
+    // Cambiar gráfico dinámicamente
+    document.getElementById('tipoGrafico').addEventListener('change', function () {
+        const nuevoTipo = this.value;
+        renderChart(nuevoTipo);
     });
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

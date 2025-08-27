@@ -1,4 +1,5 @@
-﻿.fade-in {
+﻿/* Animación de entrada */
+.fade-in {
     animation: fadeIn2 0.5s ease-in-out forwards;
 }
 
@@ -12,31 +13,99 @@
     }
 }
 
-canvas {
-    width: 100% !important;
-    height: 100% !important;
+/* Contenedor principal del reporte */
+.reporte-container {
+    text-align: center;
+    margin-top: 2rem;
 }
 
+/* Título */
+.titulo {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Selector de tipo de gráfico */
+.tipo-grafico-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    gap: 0.8rem; /* espacio entre label y select */
+}
+
+.tipo-grafico-container label {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #333;
+}
+
+.tipo-grafico-container select {
+    padding: 0.4rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background-color: #f8f9fa;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.tipo-grafico-container select:hover {
+    border-color: #007bff;
+}
+
+.tipo-grafico-container select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+/* Contenedor flexible del gráfico */
+.chart-wrapper {
+    width: 100%;
+    height: 70vh; /* altura relativa al viewport */
+    max-width: 1200px; /* para no crecer demasiado */
+    margin: auto;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: center; /* centra horizontalmente */
+    align-items: center; /* centra verticalmente */
+    box-sizing: border-box;
+}
+
+/* Ajuste del canvas */
+canvas {
+    width: auto !important;
+    height: auto !important;
+    max-width: 100% !important;
+}
+
+/* Contenedor con estilo para el canvas */
 .chart-container {
-    position: relative; /* Importante para que el canvas se ajuste */
     width: 60%;
-    height: 400px; 
+    margin: auto;
+    position: relative;
+    height: 600px;
+    max-width: 700px;
+    max-height: 1000px;
     margin: 0 auto;
     padding: 16px;
     border-radius: 8px;
-    background-color: #ffffff;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+/* Responsividad */
 @media (min-width: 1200px) {
-    .chart-title {
+    .titulo {
         font-size: 2em;
     }
 }
 
 @media (max-width: 600px) {
-    .chart-title {
-        font-size: 1.2em;
+    .titulo {
+        font-size: 1.4em;
     }
 
     .chart-legend {
@@ -45,7 +114,7 @@ canvas {
 }
 
 @media (max-width: 480px) {
-    h2 {
+    .titulo {
         font-size: 18px;
         text-align: center;
         padding: 0 10px;
