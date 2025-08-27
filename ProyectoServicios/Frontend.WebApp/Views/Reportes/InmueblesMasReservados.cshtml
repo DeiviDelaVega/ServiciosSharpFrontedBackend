@@ -1,6 +1,6 @@
 ﻿@{
     Layout = null;
-    ViewData["Title"] = "Inmuebles Mas Reservados";
+    ViewData["Title"] = "Inmuebles Más Reservados";
     @Html.Partial("_NavAdmin")
     var datos = (List<(string Nombre, int Cantidad)>)ViewBag.Datos;
     var labels = datos.Select(d => d.Nombre).ToList();
@@ -8,35 +8,101 @@
 }
 <link rel="stylesheet" href="@Url.Content("~/css/Reportes.css")" />
 
-<div class="fade-in">
+<div class="reporte-container fade-in text-center">
     <br />
-    <h2 style="text-align:center;">Inmuebles Más Reservados</h2>
-    <br>
-    <div class="chart-container" style="width: 60%; margin: auto;">
+    <h2 class="titulo">🏠 Inmuebles Más Reservados</h2>
+
+    <!-- Selector de tipo de gráfico -->
+    <div class="tipo-grafico-container">
+        <label for="tipoGraficoInmuebles">Tipo de gráfico: </label>
+        <select id="tipoGraficoInmuebles">
+            <option value="bar">Barras</option>
+            <option value="pie">Pastel</option>
+            <option value="doughnut">Dona</option>
+        </select>
+    </div>
+    <br />
+    <!-- Contenedor del gráfico -->
+    <div class="chart-wrapper chart-container">
         <canvas id="graficoInmuebles"></canvas>
     </div>
-    <br>
 </div>
+
+<style>
+    /* Ajuste para gráficos circulares */
+    .chart-container {
+        width: 60%;
+        margin: auto;
+        position: relative;
+        max-width: 600px;
+        height: 500px; /* altura fija para mantener proporción */
+    }
+</style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const labels = @Html.Raw(Json.Serialize(labels));
     const valores = @Html.Raw(Json.Serialize(valores));
 
-    new Chart(document.getElementById('graficoInmuebles'), {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Cantidad de Reservas',
-                data: valores,
-                backgroundColor: 'rgba(54, 162, 235, 0.7)'
-            }]
-        },
-            options: {
-            responsive: true,
-            maintainAspectRatio: false  // Importante para que se adapte al contenedor
+    let chartInmuebles; // Referencia global
+
+    // Función para renderizar gráfico dinámico
+    function renderChartInmuebles(tipo) {
+        const ctx = document.getElementById('graficoInmuebles').getContext('2d');
+
+        if (chartInmuebles) {
+            chartInmuebles.destroy();
         }
+
+        // Configuración dinámica igual que en "Clientes"
+        let opciones = {
+            responsive: true,
+            maintainAspectRatio: (tipo === "pie" || tipo === "doughnut"), // true solo para circulares
+            plugins: {
+                legend: { display: tipo !== 'bar', position: 'top' }
+            }
+        };
+
+        if (tipo === "bar") {
+            opciones.scales = {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Reservas'
+                    }
+                }
+            };
+        }
+
+        chartInmuebles = new Chart(ctx, {
+            type: tipo,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Cantidad de Reservas',
+                    data: valores,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)'
+                    ]
+                }]
+            },
+            options: opciones
+        });
+    }
+
+    // Render inicial en "bar"
+    renderChartInmuebles('bar');
+
+    // Cambiar gráfico dinámicamente
+    document.getElementById('tipoGraficoInmuebles').addEventListener('change', function () {
+        const nuevoTipo = this.value;
+        renderChartInmuebles(nuevoTipo);
     });
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
