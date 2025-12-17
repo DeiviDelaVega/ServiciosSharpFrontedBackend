@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Shared.Models
 {
@@ -18,6 +13,6 @@ namespace Shared.Models
         [StringLength(255, MinimumLength = 6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
         public string? Clave { get; set; }
 
-        public string DNTCaptchaText { get; set; }
+        public string? DNTCaptchaText { get; set; }
     }
 }

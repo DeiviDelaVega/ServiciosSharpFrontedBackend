@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using DNTCaptcha.Core;
 using Microsoft.AspNetCore.Localization;
 using Stripe;
 
@@ -19,6 +18,11 @@ builder.Services.AddHttpClient("ServicioReservas", c =>
     c.BaseAddress = new Uri("https://localhost:7185/"); // URL de tu ServicioReservas.API
 });
 
+builder.Services.AddHttpClient("Recaptcha", c =>
+{
+    c.BaseAddress = new Uri("https://www.google.com/recaptcha/api/");
+});
+
 
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
@@ -35,14 +39,6 @@ builder.Services.AddHttpClient("ServicioInmuebles", c =>
 builder.Services.AddHttpClient("ServicioReservas", c =>
     c.BaseAddress = new Uri(builder.Configuration["ApiUrls:ServicioReservas"]!));
 
-builder.Services.AddDNTCaptcha(o =>
-{
-    o.UseSessionStorageProvider();
-    o.WithEncryptionKey("mysupersecret_dntcaptcha_encryption_key_2025");
-    o.ShowThousandsSeparators(false);
-    o.AbsoluteExpiration(minutes: 7);
-
-});
 // Session config
 builder.Services.AddSession(o =>
 {

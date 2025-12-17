@@ -1,20 +1,27 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Shared.Models;
-using System.IdentityModel.Tokens.Jwt;
-using System.Net.Http.Json;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using DNTCaptcha.Core;
+using System.Text.Json;
+using Frontend.WebApp.Models;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Models;
 
 namespace Frontend.WebApp.Controllers
 {
     public class AuthController : Controller
     {
         private readonly HttpClient _http;
+        private readonly HttpClient _recaptcha;
+        private readonly IConfiguration _config;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IHttpClientFactory httpClientFactory)
+        public AuthController(IHttpClientFactory httpClientFactory, IConfiguration config, ILogger<AuthController> logger)
         {
             _http = httpClientFactory.CreateClient("ServicioClientes");
+            _recaptcha = httpClientFactory.CreateClient("Recaptcha");
+            _config = config;
+            _logger = logger;
         }
+
 
         [HttpGet]
         public IActionResult Login()
@@ -29,38 +36,90 @@ namespace Frontend.WebApp.Controllers
                 if (rol == "admin") return RedirectToAction("Index", "Admin");
                 if (rol == "cliente") return RedirectToAction("Index", "Cliente");
             }
-            return View();
-        }
 
+            return View(new LoginVm());
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [ValidateDNTCaptcha (ErrorMessage = "Captcha Invalido")]
-        public async Task<IActionResult> Login(LoginDto dto)
+        public async Task<IActionResult> Login(LoginVm vm)
         {
             if (!ModelState.IsValid)
-                return View(dto);
+                return View(vm);
 
-            var res = await _http.PostAsJsonAsync("api/auth/login", dto);
-            if (res.IsSuccessStatusCode)
+            var recaptchaToken = Request.Form["g-recaptcha-response"].ToString();
+
+            var captcha = await VerifyRecaptchaAsync(recaptchaToken);
+            if (!captcha.ok)
             {
-                var tokenObj = await res.Content.ReadFromJsonAsync<TokenResponse>();
-                HttpContext.Session.SetString("token", tokenObj!.Token!);
-
-                var handler = new JwtSecurityTokenHandler();
-                var token = handler.ReadJwtToken(tokenObj.Token);
-                var rol = token.Claims.First(c => c.Type == ClaimTypes.Role).Value;
-                var nombreCompleto = token.Claims.FirstOrDefault(c => c.Type == "NombreCompleto")?.Value;
-                HttpContext.Session.SetString("nombreUsuario", nombreCompleto ?? "");
-
-                return rol == "admin"
-                    ? RedirectToAction("Index", "Admin")
-                    : RedirectToAction("Index", "Cliente");
+                var detail = captcha.errors.Length > 0 ? string.Join(", ", captcha.errors) : captcha.raw;
+                ModelState.AddModelError(string.Empty, $"Captcha inválido ({detail})");
+                return View(vm);
             }
 
-            ViewBag.Mensaje = "Credenciales inválidas";
-            return View(dto);
+            var dto = new LoginDto { Correo = vm.Correo, Clave = vm.Clave };
+            var res = await _http.PostAsJsonAsync("api/auth/login", dto);
+
+            if (!res.IsSuccessStatusCode)
+            {
+                ViewBag.Mensaje = "Credenciales inválidas";
+                return View(vm);
+            }
+
+            var tokenObj = await res.Content.ReadFromJsonAsync<TokenResponse>();
+            HttpContext.Session.SetString("token", tokenObj!.Token!);
+
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.ReadJwtToken(tokenObj.Token);
+
+            var rol = token.Claims.First(c => c.Type == ClaimTypes.Role).Value;
+            var nombreCompleto = token.Claims.FirstOrDefault(c => c.Type == "NombreCompleto")?.Value;
+            HttpContext.Session.SetString("nombreUsuario", nombreCompleto ?? "");
+
+            return rol == "admin"
+                ? RedirectToAction("Index", "Admin")
+                : RedirectToAction("Index", "Cliente");
         }
+
+
+        private async Task<(bool ok, string[] errors, string raw)> VerifyRecaptchaAsync(string responseToken)
+        {
+            if (string.IsNullOrWhiteSpace(responseToken))
+                return (false, new[] { "missing-input-response" }, "");
+
+            var secret = _config["Recaptcha:SecretKey"];
+            if (string.IsNullOrWhiteSpace(secret))
+                return (false, new[] { "missing-secret" }, "");
+
+            using var content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                ["secret"] = secret,
+                ["response"] = responseToken
+            });
+
+            var res = await _recaptcha.PostAsync("siteverify", content);
+            var raw = await res.Content.ReadAsStringAsync();
+
+            if (!res.IsSuccessStatusCode)
+                return (false, new[] { $"http-{(int)res.StatusCode}" }, raw);
+
+            using var doc = JsonDocument.Parse(raw);
+            var root = doc.RootElement;
+
+            var ok = root.TryGetProperty("success", out var s) && s.ValueKind == JsonValueKind.True;
+
+            string[] errors = Array.Empty<string>();
+            if (root.TryGetProperty("error-codes", out var e) && e.ValueKind == JsonValueKind.Array)
+            {
+                errors = e.EnumerateArray()
+                    .Select(x => x.GetString())
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .ToArray()!;
+            }
+
+            return (ok, errors, raw);
+        }
+
 
         [HttpGet]
         public IActionResult RegistroCliente()
@@ -167,5 +226,12 @@ namespace Frontend.WebApp.Controllers
 
             return RedirectToAction("PaginaInicio");
         }
+    }
+    public class RecaptchaVerifyResponse
+    {
+        public bool Success { get; set; }
+        public string[]? ErrorCodes { get; set; }
+        public string? Hostname { get; set; }
+        public DateTime? ChallengeTs { get; set; }
     }
 }
