@@ -25,8 +25,285 @@
             @RenderBody()
         </main>
     </div>
+	
+<!-- Floating Chatbot -->
+<button id="chatbot-toggle" type="button" aria-label="Abrir chat">
+	💬
+</button>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+<div id="chatbot" class="chatbot-hidden" aria-live="polite">
+	<div class="chatbot-header">
+		<div class="chatbot-title">
+			<strong>Asistente</strong>
+			<small>¿En qué te ayudo?</small>
+		</div>
+		<button id="chatbot-close" type="button" aria-label="Cerrar chat">✕</button>
+	</div>
+
+	<div id="chatbot-messages" class="chatbot-messages">
+		<!-- Mensajes se agregan por JS -->
+	</div>
+
+	<div class="chatbot-input">
+		<input id="chatbot-text" type="text" placeholder="Escribí tu mensaje..." autocomplete="off" />
+		<button id="chatbot-send" type="button">Enviar</button>
+	</div>
+</div>
+
+    <style>
+        #chatbot-toggle {
+          position: fixed;
+          right: 18px;
+          bottom: 18px;
+          width: 54px;
+          height: 54px;
+          border: 0;
+          border-radius: 999px;
+          background: #0d6efd;
+          color: #fff;
+          font-size: 22px;
+          box-shadow: 0 8px 24px rgba(0,0,0,.2);
+          z-index: 9999;
+          cursor: pointer;
+        }
+
+        #chatbot {
+          position: fixed;
+          right: 18px;
+          bottom: 84px;
+          width: 320px;
+          max-width: calc(100vw - 36px);
+          height: 420px;
+          max-height: calc(100vh - 140px);
+          background: #fff;
+          border-radius: 14px;
+          box-shadow: 0 16px 40px rgba(0,0,0,.25);
+          overflow: hidden;
+          z-index: 9999;
+          display: flex;
+          flex-direction: column;
+          border: 1px solid rgba(0,0,0,.08);
+        }
+
+        .chatbot-hidden { display: none !important; }
+
+        .chatbot-header {
+          padding: 10px 12px;
+          background: #111827;
+          color: #fff;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .chatbot-title { display: flex; flex-direction: column; line-height: 1.1; }
+        .chatbot-title small { opacity: .8; font-size: 12px; }
+
+        #chatbot-close {
+          background: transparent;
+          border: 0;
+          color: #fff;
+          font-size: 18px;
+          cursor: pointer;
+          padding: 4px 8px;
+          border-radius: 8px;
+        }
+        #chatbot-close:hover { background: rgba(255,255,255,.12); }
+
+        .chatbot-messages {
+          padding: 12px;
+          flex: 1;
+          overflow-y: auto;
+          background: #f8fafc;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .chatbot-row {
+          display: flex;
+          gap: 8px;
+        }
+
+        .chatbot-row.user { justify-content: flex-end; }
+        .chatbot-row.bot  { justify-content: flex-start; }
+
+        .chatbot-bubble {
+          max-width: 85%;
+          padding: 10px 12px;
+          border-radius: 14px;
+          font-size: 14px;
+          white-space: pre-wrap;
+          word-break: break-word;
+        }
+
+        .chatbot-row.user .chatbot-bubble {
+          background: #0d6efd;
+          color: #fff;
+          border-bottom-right-radius: 6px;
+        }
+
+        .chatbot-row.bot .chatbot-bubble {
+          background: #ffffff;
+          color: #111827;
+          border: 1px solid rgba(0,0,0,.08);
+          border-bottom-left-radius: 6px;
+        }
+
+        .chatbot-input {
+          display: flex;
+          gap: 8px;
+          padding: 10px;
+          background: #fff;
+          border-top: 1px solid rgba(0,0,0,.08);
+        }
+
+        #chatbot-text {
+          flex: 1;
+          border: 1px solid rgba(0,0,0,.16);
+          border-radius: 10px;
+          padding: 10px 12px;
+          outline: none;
+        }
+
+        #chatbot-send {
+          border: 0;
+          border-radius: 10px;
+          padding: 0 14px;
+          background: #111827;
+          color: #fff;
+          cursor: pointer;
+        }
+
+        #chatbot-send:disabled {
+          opacity: .6;
+          cursor: not-allowed;
+        }
+    </style>
+
+
+    <script>
+        (function () {
+          // 👉 Cambiá esto por tu endpoint real
+          const CHAT_API_URL = "/api/chat";
+
+          const toggleBtn = document.getElementById("chatbot-toggle");
+          const chatbot   = document.getElementById("chatbot");
+          const closeBtn  = document.getElementById("chatbot-close");
+          const list      = document.getElementById("chatbot-messages");
+          const input     = document.getElementById("chatbot-text");
+          const sendBtn   = document.getElementById("chatbot-send");
+
+          // Persistimos un conversationId simple (si tu backend lo usa)
+          const STORAGE_KEY = "chat_conversation_id";
+          let conversationId = localStorage.getItem(STORAGE_KEY) || null;
+
+          function openChat() {
+            chatbot.classList.remove("chatbot-hidden");
+            input.focus();
+          }
+
+          function closeChat() {
+            chatbot.classList.add("chatbot-hidden");
+          }
+
+          function escapeHtml(str) {
+            return String(str)
+              .replaceAll("&", "&amp;")
+              .replaceAll("<", "&lt;")
+              .replaceAll(">", "&gt;")
+              .replaceAll('"', "&quot;")
+              .replaceAll("'", "&#039;");
+          }
+
+          function addMessage(role, text) {
+            const row = document.createElement("div");
+            row.className = "chatbot-row " + role;
+
+            const bubble = document.createElement("div");
+            bubble.className = "chatbot-bubble";
+            bubble.innerHTML = escapeHtml(text);
+
+            row.appendChild(bubble);
+            list.appendChild(row);
+            list.scrollTop = list.scrollHeight;
+
+            return { row, bubble };
+          }
+
+          function setLoading(isLoading) {
+            sendBtn.disabled = isLoading;
+            input.disabled = isLoading;
+          }
+
+          async function sendMessage() {
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = "";
+            addMessage("user", text);
+
+            const typing = addMessage("bot", "Escribiendo…");
+
+            setLoading(true);
+
+            try {
+              const res = await fetch(CHAT_API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  conversationId: conversationId,
+                  message: text
+                })
+              });
+
+              if (!res.ok) {
+                const errText = await res.text().catch(() => "");
+                throw new Error("HTTP " + res.status + " " + errText);
+              }
+
+              const data = await res.json();
+
+              // Esperado:
+              // { reply: "texto", conversationId: "abc123" }
+              const reply = data.reply ?? "(sin respuesta)";
+              if (data.conversationId) {
+                conversationId = data.conversationId;
+                localStorage.setItem(STORAGE_KEY, conversationId);
+              }
+
+              typing.bubble.innerHTML = escapeHtml(reply);
+            } catch (e) {
+              typing.bubble.innerHTML = escapeHtml("Se rompió la llamada a la API: " + (e.message || e));
+            } finally {
+              setLoading(false);
+              input.focus();
+              list.scrollTop = list.scrollHeight;
+            }
+          }
+
+          // Eventos
+          toggleBtn.addEventListener("click", () => {
+            if (chatbot.classList.contains("chatbot-hidden")) openChat();
+            else closeChat();
+          });
+
+          closeBtn.addEventListener("click", closeChat);
+
+          sendBtn.addEventListener("click", sendMessage);
+
+          input.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") sendMessage();
+          });
+
+          // Mensaje inicial opcional
+          addMessage("bot", "Hola 👋 Decime qué necesitás y te doy una mano.");
+
+        })();
+    </script>
+
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
